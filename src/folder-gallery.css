@@ -25,7 +25,7 @@
 
 .fg-scene {
   position: relative;
-  width: var(--fg-scene-w);
+  width: min(480px, 92vw); /* JS overrides per mode; this is the stack default */
   height: 440px;
   perspective: var(--fg-perspective);
   transform-style: preserve-3d;

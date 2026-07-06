@@ -200,7 +200,7 @@ export function createFolderGallery(root, options = {}) {
   }
   function layoutGrid() {
     const cols = n <= 4 ? 2 : 3;
-    const sceneW = MODE_WIDTHS.grid;
+    const sceneW = scene.clientWidth || MODE_WIDTHS.grid;
     const gap = 16;
     const cardW = sceneW;
     const cardH = sceneW * (2 / 3);
@@ -224,7 +224,7 @@ export function createFolderGallery(root, options = {}) {
     scene.style.height = rows * (scaledH + tabScaled + gap) + 20 + 'px';
   }
   function layoutCarousel() {
-    const sceneW = MODE_WIDTHS.carousel;
+    const sceneW = scene.clientWidth || MODE_WIDTHS.carousel;
     const cardW = sceneW;
     const cardH = cardW * (2 / 3);
     const activeSc = 0.62;
@@ -244,7 +244,14 @@ export function createFolderGallery(root, options = {}) {
       setCardTransform(card, { x: tx, y: ty, z, rx: 0, ry: 0, s: sc, zIndex: n - Math.abs(offset), opacity: op, isActive: offset === 0 });
     });
   }
+  // Scene width tracks the active mode so the layout math (which assumes the
+  // mode's logical width) matches the actually-rendered card width. Layouts
+  // then read scene.clientWidth, so everything stays self-consistent at any size.
+  function sizeScene() {
+    scene.style.width = `min(${MODE_WIDTHS[mode]}px, 92vw)`;
+  }
   function applyLayout() {
+    sizeScene();
     (mode === 'grid' ? layoutGrid : mode === 'carousel' ? layoutCarousel : layoutStack)();
     dots.forEach((d, i) => {
       d.classList.toggle('is-active', i === active);
