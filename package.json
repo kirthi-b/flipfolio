@@ -1,0 +1,37 @@
+{
+  "name": "folder-gallery",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A framework-agnostic 3D folder gallery for the web — browse real content in manila folders, with stack, grid, and carousel modes.",
+  "type": "module",
+  "license": "MIT",
+  "author": "Kirthi Balakrishnan",
+  "homepage": "https://kirthi.studio",
+  "keywords": [
+    "gallery",
+    "folder",
+    "3d",
+    "carousel",
+    "ui",
+    "component",
+    "css-3d",
+    "web-component",
+    "accessibility"
+  ],
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "main": "./src/folder-gallery.js",
+  "module": "./src/folder-gallery.js",
+  "exports": {
+    ".": "./src/folder-gallery.js",
+    "./styles.css": "./src/folder-gallery.css"
+  },
+  "files": [
+    "src"
+  ],
+  "scripts": {
+    "check": "node --check src/folder-gallery.js",
+    "serve": "python3 -m http.server 5177"
+  }
+}

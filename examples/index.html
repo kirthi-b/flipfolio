@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>folder-gallery — example</title>
+  <link rel="stylesheet" href="../src/folder-gallery.css">
+  <style>
+    body {
+      margin: 0; min-height: 100vh; display: grid; place-items: center;
+      background: #14161a; color: #e8e8e6;
+      font: 15px/1.5 system-ui, sans-serif;
+    }
+    .wrap { display: flex; flex-direction: column; align-items: center; gap: 1.5rem; padding: 3rem 1rem; }
+    .modes { display: flex; gap: .5rem; }
+    .modes button {
+      background: #23262c; color: #e8e8e6; border: 1px solid #333;
+      padding: .5rem .9rem; border-radius: 999px; cursor: pointer; font: inherit;
+    }
+    .modes button:hover { background: #2c3038; }
+    /* demo content blocks so the example needs no image assets */
+    .demo-note { text-align: center; padding: 1rem; color: #cfcfcd; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="modes">
+      <button data-mode="stack">Stack</button>
+      <button data-mode="grid">Grid</button>
+      <button data-mode="carousel">Carousel</button>
+    </div>
+    <div id="gallery"></div>
+  </div>
+
+  <script type="module">
+    import { createFolderGallery } from '../src/folder-gallery.js';
+
+    const items = [
+      { label: 'One Corner',  color: '#2a3a3a', content: '<div class="demo-note">One Corner</div>' },
+      { label: 'Banglatown',  color: '#3d2e42', content: '<div class="demo-note">Banglatown</div>' },
+      { label: 'Diversity',   color: '#2a2d3e', content: '<div class="demo-note">Diversity</div>' },
+      { label: 'QoL NYC',     color: '#3a3d2f', content: '<div class="demo-note">QoL NYC</div>' },
+      { label: 'Noise NYC',   color: '#4a3030', content: '<div class="demo-note">Noise NYC</div>' },
+    ];
+
+    const gallery = createFolderGallery(document.getElementById('gallery'), {
+      items,
+      mode: 'stack',
+      onSelect: (item, i) => console.log('selected', item.label, i),
+    });
+
+    document.querySelectorAll('.modes button').forEach((b) => {
+      b.addEventListener('click', () => gallery.setMode(b.dataset.mode));
+    });
+  </script>
+</body>
+</html>

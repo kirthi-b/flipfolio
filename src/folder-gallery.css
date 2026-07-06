@@ -1,0 +1,121 @@
+/* folder-gallery — default stylesheet (v0.1.0 · WIP)
+ * Everything is themeable via the CSS custom properties on .fg-root below.
+ * Scoped to .fg-* classes; ships no global selectors. */
+
+.fg-root {
+  /* ── theming tokens (override these) ── */
+  --fg-folder-bg: #2a3a3a;
+  --fg-radius: 8px;
+  --fg-perspective: 1200px;
+  --fg-transition: 320ms cubic-bezier(.2, .7, .2, 1);
+  --fg-front: rgba(20, 20, 22, .38);
+  --fg-front-active: rgba(20, 20, 22, .22);
+  --fg-active-blur: 10px;
+  --fg-label: #f4f4f2;
+  --fg-dot: #9a9a9a;
+  --fg-dot-active: #f4f4f2;
+  --fg-scene-w: min(480px, 92vw);
+
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.fg-scene {
+  position: relative;
+  width: var(--fg-scene-w);
+  height: 440px;
+  perspective: var(--fg-perspective);
+  transform-style: preserve-3d;
+}
+
+.fg-card {
+  position: absolute;
+  inset: 0 0 auto 0;
+  width: 100%;
+  aspect-ratio: 480 / 342;
+  transition: transform var(--fg-transition), opacity var(--fg-transition);
+  cursor: pointer;
+  contain: layout paint;
+  outline: none;
+  will-change: auto;
+}
+.fg-card.is-active { cursor: default; }
+.fg-card:focus-visible { outline: 2px solid var(--fg-dot-active); outline-offset: 4px; border-radius: var(--fg-radius); }
+
+.fg-folder {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 8px 24px rgba(0, 0, 0, .28));
+}
+
+.fg-content {
+  position: absolute;
+  left: 6%;
+  right: 6%;
+  top: 13%;
+  bottom: 20%;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: var(--fg-radius);
+  background: rgba(255, 255, 255, .04);
+}
+.fg-image { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.fg-front {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 40%;
+  border-radius: 0 0 var(--fg-radius) var(--fg-radius);
+  background: var(--fg-front);
+  display: flex;
+  align-items: flex-end;
+  padding: .9rem 1rem;
+  transition: background var(--fg-transition), backdrop-filter var(--fg-transition);
+}
+/* Frost the ACTIVE card only — backdrop-filter is expensive, don't stack it. */
+.fg-card.is-active .fg-front {
+  background: var(--fg-front-active);
+  backdrop-filter: blur(var(--fg-active-blur));
+  -webkit-backdrop-filter: blur(var(--fg-active-blur));
+}
+.fg-label {
+  color: var(--fg-label);
+  font-weight: 600;
+  font-size: .95rem;
+  letter-spacing: .01em;
+}
+
+.fg-dots { display: flex; gap: .5rem; }
+.fg-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  background: var(--fg-dot);
+  opacity: .5;
+  transition: opacity var(--fg-transition), transform var(--fg-transition), background var(--fg-transition);
+}
+.fg-dot.is-active { background: var(--fg-dot-active); opacity: 1; transform: scale(1.35); }
+
+.fg-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fg-card { transition-duration: 1ms; }
+}
