@@ -21,17 +21,28 @@
   "sideEffects": [
     "**/*.css"
   ],
-  "main": "./src/folder-gallery.js",
-  "module": "./src/folder-gallery.js",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
-    ".": "./src/folder-gallery.js",
-    "./styles.css": "./src/folder-gallery.css"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./styles.css": "./dist/folder-gallery.css"
   },
   "files": [
-    "src"
+    "dist"
   ],
   "scripts": {
     "check": "node --check src/folder-gallery.js",
+    "build": "tsup",
+    "prepublishOnly": "npm run build",
     "serve": "python3 -m http.server 5177"
+  },
+  "devDependencies": {
+    "tsup": "^8.3.5",
+    "typescript": "^6.0.3"
   }
 }
