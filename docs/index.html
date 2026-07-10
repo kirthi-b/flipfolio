@@ -59,6 +59,28 @@
     folder-gallery { margin-top: 1rem; min-height: 460px; }
     .hint { color: var(--page-faint); font-size: .85rem; margin-top: 2rem; }
     .hint kbd { background: var(--kbd-bg); border: 1px solid var(--kbd-border); border-bottom-width: 2px; border-radius: 4px; padding: .05em .4em; }
+
+    /* ── peek contents: a flower polaroid + a city fact card ──
+       Paper stays paper in both themes, like prints pulled from a folder. */
+    #fg.fg-root { --fg-peek-shift: -64%; }
+    folder-gallery .fg-content { overflow: visible; }
+    .peek-pair {
+      display: flex; gap: 16px; align-items: center; justify-content: center;
+      width: 100%; height: 100%;
+    }
+    .pol {
+      background: #fdfcf9; border-radius: 5px; padding: 8px;
+      box-shadow: 0 14px 30px rgba(20, 20, 20, 0.28);
+    }
+    .pol--img { width: 42%; transform: rotate(-4deg); }
+    .pol--img img { width: 100%; aspect-ratio: 5/4; object-fit: cover; display: block; border-radius: 3px; }
+    .pol--img figcaption {
+      font-size: .78rem; font-weight: 600; color: #3a3830;
+      text-align: center; padding-top: 6px;
+    }
+    .pol--fact { width: 46%; transform: rotate(3deg); padding: 14px 16px; text-align: left; }
+    .pol--fact h4 { font-size: .95rem; color: #1c1c1a; margin: 0 0 6px; }
+    .pol--fact p { font-size: .82rem; line-height: 1.5; color: #55503f; margin: 0; }
   </style>
 </head>
 <body>
@@ -113,27 +135,45 @@
       manila: { ink: '#3a3428', colors: ['#e8c96a', '#dd8f5e', '#8fb5a3', '#e2cf8f', '#b58fb5'] },
     };
     const CITIES = [
-      { label: 'Tokyo',       slug: 'tokyo' },
-      { label: 'Nairobi',     slug: 'nairobi' },
-      { label: 'São Paulo',   slug: 'sao-paulo' },
-      { label: 'Copenhagen',  slug: 'copenhagen' },
-      { label: 'Mexico City', slug: 'mexico-city' },
+      { label: 'Tokyo',       slug: 'tokyo',       flower: 'Sakura',     flowerImg: 'sakura',
+        fact: 'The largest metro area on earth: about 37 million people.' },
+      { label: 'Nairobi',     slug: 'nairobi',     flower: 'Orchid',     flowerImg: 'orchid',
+        fact: 'The only capital city with a national park inside its limits.' },
+      { label: 'São Paulo',   slug: 'sao-paulo',   flower: 'Ipê',        flowerImg: 'ipe',
+        fact: 'The largest Portuguese speaking city in the world.' },
+      { label: 'Copenhagen',  slug: 'copenhagen',  flower: 'Marguerite', flowerImg: 'marguerite',
+        fact: 'Bikes outnumber cars in the city center.' },
+      { label: 'Mexico City', slug: 'mexico-city', flower: 'Dahlia',     flowerImg: 'dahlia',
+        fact: 'Built on a drained lake bed, and still slowly sinking.' },
     ];
 
     let currentPalette = 'manila';
     let contentMode = 'labels'; // 'labels' | 'photos'
     let peekOn = false;
 
+    function peekPair(c) {
+      // Portfolio-style pair pulled from the folder: a flower polaroid and a
+      // city fact card.
+      return `<div class="peek-pair">
+        <figure class="pol pol--img">
+          <img src="./photos/flowers/${c.flowerImg}.jpg" alt="${c.flower}">
+          <figcaption>${c.flower}</figcaption>
+        </figure>
+        <div class="pol pol--fact">
+          <h4>${c.label}</h4>
+          <p>${c.fact}</p>
+        </div>
+      </div>`;
+    }
+
     function buildItems() {
       const p = PALETTES[currentPalette];
       return CITIES.map((c, i) => {
         const base = { label: c.label, color: p.colors[i % p.colors.length] };
-        if (contentMode === 'photos') {
-          // Photo mode: the decal skins the whole folder silhouette, and the
-          // same photo rides inside as content so Peek has something to pull out.
-          return { ...base, decal: `./photos/${c.slug}.jpg`, content: `<img class="fg-image" src="./photos/${c.slug}.jpg" alt="">` };
-        }
-        return { ...base, content: `<div style="font-weight:600;color:${p.ink}">${c.label}</div>` };
+        if (contentMode === 'photos') base.decal = `./photos/${c.slug}.jpg`;
+        // Folders are empty until Peek is on; the peek pair is the contents.
+        if (peekOn) base.content = peekPair(c);
+        return base;
       });
     }
 
@@ -182,7 +222,8 @@
     const peekBtn = document.getElementById('peekBtn');
     peekBtn.addEventListener('click', () => {
       peekOn = !peekOn;
-      fg.setPeek(peekOn ? 'always' : 'hover');
+      rebuild(); // folders are empty until Peek adds the flower + fact pair
+      fg.setPeek(peekOn ? 'always' : 'off');
       peekBtn.classList.toggle('active', peekOn);
     });
     document.querySelectorAll('[data-palette]').forEach((b) => {
