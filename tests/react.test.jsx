@@ -48,7 +48,7 @@ describe('<FolderGallery /> (React wrapper)', () => {
     const first = vi.fn();
     const second = vi.fn();
     act(() => reactRoot.render(createElement(FolderGallery, { items: ITEMS, onSelect: first })));
-    // swap the callback without changing items — must NOT rebuild, must use the new fn
+    // swap the callback without changing items - must NOT rebuild, must use the new fn
     act(() => reactRoot.render(createElement(FolderGallery, { items: ITEMS, onSelect: second })));
     act(() => { container.querySelector('.fg-card').click(); });
     expect(first).not.toHaveBeenCalled();

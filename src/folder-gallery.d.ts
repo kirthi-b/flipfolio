@@ -7,7 +7,7 @@ export interface FolderItem {
   src?: string;
   /** Arbitrary interior content: an HTML string or a DOM node. */
   content?: string | Node;
-  /** Any extra data — passed through to onSelect. */
+  /** Any extra data - passed through to onSelect. */
   [key: string]: unknown;
 }
 

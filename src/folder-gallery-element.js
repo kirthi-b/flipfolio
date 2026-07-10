@@ -1,5 +1,5 @@
 /* ============================================================================
- * <folder-gallery> — Custom Element wrapper around the framework-agnostic core.
+ * <folder-gallery> - Custom Element wrapper around the framework-agnostic core.
  *
  *   import { defineFolderGallery } from 'folder-gallery/element';
  *   defineFolderGallery();               // registers <folder-gallery>
@@ -27,7 +27,7 @@ export class FolderGalleryElement extends HTMLElement {
     this._items = [];
   }
 
-  /** Items are an array — set via property (attributes can't hold objects). */
+  /** Items are an array - set via property (attributes can't hold objects). */
   get items() { return this._items; }
   set items(value) {
     this._items = Array.isArray(value) ? value : [];
@@ -72,7 +72,7 @@ export class FolderGalleryElement extends HTMLElement {
     if (this._handle) { this._handle.destroy(); this._handle = null; }
   }
 
-  /* Imperative API — delegate to the core handle. */
+  /* Imperative API - delegate to the core handle. */
   next() { this._handle && this._handle.next(); }
   prev() { this._handle && this._handle.prev(); }
   goTo(i) { this._handle && this._handle.goTo(i); }

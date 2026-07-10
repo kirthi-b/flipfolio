@@ -1,15 +1,15 @@
 # folder-gallery
 
-> **v0.1.0 · work in progress.** Private while it's built out; not published to npm yet.
+> **v0.1.0, work in progress.** Private while it gets built out; not published to npm yet.
 
-A framework-agnostic 3D folder gallery for the web. Items render as physical manila folders you can browse in **stack**, **grid**, or **carousel** mode. No framework, no dependencies, ~self-contained.
+A framework-agnostic 3D folder gallery for the web. Items render as manila folders you can browse in stack, grid, or carousel mode. No framework, no dependencies.
 
-> _**[Kirthi writes the real pitch here — her voice.]** The positioning to land (per the plan): "a manila-folder gallery for **real content**, not a decorative folder icon." Everything below the fold is factual scaffolding; the hero + "why I built it" are hers to write before launch._
+> _[Kirthi writes the real pitch here, in her voice, before launch. Everything below is factual scaffolding.]_
 
-![folder-gallery demo — stack, grid, and carousel modes](assets/demo.gif)
+![folder-gallery demo: stack, grid, and carousel modes](assets/demo.gif)
 
 ## Status
-This is the extracted **core** — ported from the hand-built portfolio engine, adapted to own its own DOM and tear down cleanly. Still to come before publish: named build (tsup ESM+CJS+types), Web-Component wrapper, docs site + live playground, polished default CSS, tests, and the npm/shadcn-registry release. See `~/Documents/notes/folder-widget-plan.md`.
+This is the extracted core, ported from the hand-built portfolio engine and adapted to own its own DOM and tear down cleanly. Done so far: dual ESM/CJS build with types, a `<folder-gallery>` web component, a React wrapper, 27 tests, light and dark themes, and the playground in `docs/`. Left before publish: the hero copy, an optional docs site, and the npm/shadcn-registry release. See `~/Documents/notes/folder-widget-plan.md`.
 
 ## Quick start
 ```html
@@ -33,7 +33,7 @@ This is the extracted **core** — ported from the hand-built portfolio engine, 
 ```
 
 ## API
-`createFolderGallery(rootElement, options) → handle`
+`createFolderGallery(rootElement, options) -> handle`
 
 **Options**
 
@@ -41,8 +41,8 @@ This is the extracted **core** — ported from the hand-built portfolio engine, 
 |---|---|---|---|
 | `items` | `Item[]` | `[]` | `{ label?, color?, src?, content?, ...data }` |
 | `mode` | `'stack'\|'grid'\|'carousel'` | `'stack'` | 3 modes (a 4th "shelf" is planned) |
-| `contentRenderer` | `(card, item, i) => void` | built-in | fills the folder interior — this is how you hold arbitrary content |
-| `onSelect` | `(item, i) => void` | — | fired on click/Enter of the active folder (no built-in navigation) |
+| `contentRenderer` | `(card, item, i) => void` | built-in | fills the folder interior with whatever you render |
+| `onSelect` | `(item, i) => void` | (none) | fired on click/Enter of the active folder (no built-in navigation) |
 | `folderPath` | `string` | manila default | SVG path `d` (viewBox `0 0 480 342`) |
 | `loop` | `boolean` | `true` | wrap-around |
 | `scrollNav` | `boolean` | `true` | wheel/trackpad cycles the stack/carousel |
@@ -52,16 +52,16 @@ This is the extracted **core** — ported from the hand-built portfolio engine, 
 
 **Handle**: `next()`, `prev()`, `goTo(i)`, `setMode(m)`, `getActiveIndex()`, `getMode()`, `destroy()`.
 
-**Events** (CustomEvent on the root, bubbling): `fg-select`, `fg-activechange`, `fg-modechange` — each with `event.detail`.
+**Events** (CustomEvent on the root, bubbling): `fg-select`, `fg-activechange`, `fg-modechange`, each with `event.detail`.
 
 ## Content
-Each item's interior comes from `item.src` (an image), `item.content` (an HTML string or a DOM node), or a consumer `contentRenderer(card, item, index)` for anything richer. This is the difference from decorative "folder" widgets — it holds real, arbitrary content.
+Decorative folder components hard-code two or three images. This one takes an items array and renders what you give it: `item.src` for an image, `item.content` for an HTML string or a DOM node, or a consumer `contentRenderer(card, item, index)` for anything richer.
 
 ## Accessibility
 `role="listbox"`/`option`, roving tabindex, arrow-key + Home/End navigation, `aria-live` position announcements, `:focus-visible` rings, and a `prefers-reduced-motion` fallback that drops the 3D tilt.
 
 ## Theming
-Override the CSS custom properties on `.fg-root` — `--fg-folder-bg`, `--fg-radius`, `--fg-perspective`, `--fg-transition`, `--fg-front`, `--fg-front-active`, `--fg-active-blur`, `--fg-label`, `--fg-dot`, `--fg-dot-active`.
+Override the CSS custom properties on `.fg-root`: `--fg-folder-bg`, `--fg-radius`, `--fg-perspective`, `--fg-ease`, `--fg-front`, `--fg-front-solid`, `--fg-active-blur`, `--fg-label`, `--fg-dot`, `--fg-dot-active`. Light and dark both work out of the box: `prefers-color-scheme` sets the default, and `data-fg-theme="light"` or `"dark"` on `.fg-root` overrides it.
 
 ## License
 MIT © Kirthi Balakrishnan

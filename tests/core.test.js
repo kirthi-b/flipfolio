@@ -14,7 +14,7 @@ beforeEach(() => {
   document.body.appendChild(root);
 });
 
-describe('createFolderGallery — DOM & ARIA', () => {
+describe('createFolderGallery - DOM & ARIA', () => {
   it('builds its own DOM: scene, cards, dots, live region', () => {
     createFolderGallery(root, { items: ITEMS });
     expect(root.classList.contains('fg-root')).toBe(true);

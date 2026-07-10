@@ -2,7 +2,7 @@
   "name": "folder-gallery",
   "version": "0.1.0",
   "private": true,
-  "description": "A framework-agnostic 3D folder gallery for the web — browse real content in manila folders, with stack, grid, and carousel modes.",
+  "description": "A framework-agnostic 3D folder gallery for the web. Real content in manila folders, with stack, grid, and carousel modes.",
   "type": "module",
   "license": "MIT",
   "author": "Kirthi Balakrishnan",

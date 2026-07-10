@@ -8,7 +8,7 @@ const ITEMS = [
 
 // Braces matter: defineFolderGallery returns the class, and a function
 // returned from a vitest hook is treated as a teardown callback (which would
-// then be *called* — invoking the class constructor without `new`).
+// then be *called* - invoking the class constructor without `new`).
 beforeAll(() => { defineFolderGallery(); });
 beforeEach(() => { document.body.innerHTML = ''; });
 

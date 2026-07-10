@@ -1,5 +1,5 @@
 /* ============================================================================
- * folder-gallery — a framework-agnostic 3D folder gallery (core, v0.1.0 · WIP)
+ * folder-gallery - a framework-agnostic 3D folder gallery (core, v0.1.0, WIP)
  *
  *   import { createFolderGallery } from 'folder-gallery';
  *   import 'folder-gallery/styles.css';
@@ -43,7 +43,7 @@ function hexToRgb(hex) {
 }
 /* Derive the folder's three surfaces from one base color (same offsets as the
  * original engine): back/tab −30, frosted front +40 at 0.55, solid front +35.
- * The solid variant is what keeps NON-active cards fully opaque — only the
+ * The solid variant is what keeps NON-active cards fully opaque - only the
  * active card gets the translucent frosted treatment. */
 function folderColors(hex) {
   const [r, g, b] = hexToRgb(hex);
@@ -58,11 +58,11 @@ function folderColors(hex) {
 
 /* Built-in default content renderer. Accepts item.content (a Node or HTML
  * string) or item.src (an image). Consumers pass their own contentRenderer
- * (card, item, index) to hold arbitrary content — that's the whole point. */
+ * (card, item, index) to hold arbitrary content - that's the whole point. */
 function defaultContentRenderer(card, item /* , index */) {
   const wrap = document.createElement('div');
   wrap.className = 'fg-content';
-  // Duck-type DOM nodes (nodeType) rather than `instanceof Node` — `Node`
+  // Duck-type DOM nodes (nodeType) rather than `instanceof Node` - `Node`
   // isn't a global in every embedding (SSR shims, minimal DOM harnesses).
   if (item.content && typeof item.content === 'object' && typeof item.content.nodeType === 'number') {
     wrap.appendChild(item.content);
@@ -134,7 +134,7 @@ export function createFolderGallery(root, options = {}) {
     return { next() {}, prev() {}, goTo() {}, setMode() {}, getActiveIndex: () => -1, getMode: () => mode, destroy: teardown };
   }
 
-  /* ── Normalized transform — identical function list for every mode ── */
+  /* ── Normalized transform - identical function list for every mode ── */
   function setCardTransform(card, { x, y, z, rx, ry, s, zIndex, opacity, isActive }) {
     card.style.transform = `translate3d(${x}px,${y}px,${z}px) rotateX(${rx}deg) rotateY(${ry}deg) scale(${s})`;
     card.style.transformOrigin = 'center bottom';

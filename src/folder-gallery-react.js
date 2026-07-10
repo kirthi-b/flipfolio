@@ -1,5 +1,5 @@
 /* ============================================================================
- * folder-gallery/react — thin React wrapper over the framework-agnostic core.
+ * folder-gallery/react - thin React wrapper over the framework-agnostic core.
  *
  *   import { FolderGallery } from 'folder-gallery/react';
  *   import 'folder-gallery/styles.css';

@@ -1,4 +1,4 @@
-/* folder-gallery — default stylesheet (v0.1.0 · WIP)
+/* folder-gallery - default stylesheet (v0.1.0, WIP)
  * Themeable via the custom properties on .fg-root. Light and dark are both
  * first-class: `prefers-color-scheme` picks the default, and an explicit
  * `data-fg-theme="light" | "dark"` on .fg-root always wins.
@@ -118,7 +118,7 @@
 /* Subtle pop: the active folder lifts its contents a touch on hover. */
 .fg-card.is-active:hover .fg-content { transform: translateY(-8px); }
 
-/* Front panel — the folder's face. Sits over the lower 3/4 like the original
+/* Front panel - the folder's face. Sits over the lower 3/4 like the original
    (top 25%, hairline inset), radius 18. */
 .fg-front {
   position: absolute;
@@ -137,7 +137,7 @@
     box-shadow var(--fg-transition-fade) var(--fg-ease);
 }
 
-/* Behind folders: SOLID opaque front panel — no frosted glass off the active
+/* Behind folders: SOLID opaque front panel - no frosted glass off the active
    card (both a design rule and a perf rule: backdrop-filter never stacks). */
 .fg-card:not(.is-active) .fg-front {
   background: var(--fg-front-solid);
