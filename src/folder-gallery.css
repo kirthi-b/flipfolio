@@ -124,6 +124,7 @@
   border-radius: calc(var(--fg-radius) - 6px);
   transition:
     transform var(--fg-transition-fade) var(--fg-ease),
+    opacity var(--fg-transition-fade) var(--fg-ease),
     box-shadow var(--fg-transition-fade) var(--fg-ease);
   z-index: 1;
 }
@@ -146,6 +147,7 @@
 [data-fg-peek='hover'][data-fg-mode='grid'] .fg-card:hover .fg-content,
 [data-fg-peek='always'] .fg-card.is-active .fg-content {
   transform: translateY(var(--fg-peek-shift));
+  opacity: 1; /* decal cards hide their contents at rest; peek reveals them */
   transition-delay: 180ms;
 }
 
@@ -188,13 +190,20 @@
 .fg-card--decal .fg-front,
 .fg-card--decal:not(.is-active) .fg-front,
 .fg-card--decal.is-active .fg-front {
-  background: linear-gradient(to top, rgba(12, 12, 14, 0.62), rgba(12, 12, 14, 0) 65%);
+  /* Two-part shading over the photo: an inner shadow at the folder mouth so
+     the opening reads as depth, and a label scrim along the bottom. */
+  background:
+    linear-gradient(to bottom, rgba(12, 12, 14, 0.32), rgba(12, 12, 14, 0) 14%),
+    linear-gradient(to top, rgba(12, 12, 14, 0.68), rgba(12, 12, 14, 0) 52%);
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
   box-shadow: none;
 }
 .fg-card--decal.is-active .fg-front { box-shadow: var(--fg-shadow); }
 .fg-card--decal .fg-label { color: #ffffff; }
+/* A photo-skinned folder has no frosted glass to soften a glimpse, so its
+   contents stay fully tucked away until peeked. */
+.fg-card--decal .fg-content { opacity: 0; }
 
 .fg-label {
   color: var(--fg-label);
