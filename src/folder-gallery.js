@@ -41,10 +41,19 @@ function hexToRgb(hex) {
   const h = String(hex).replace('#', '');
   return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
 }
-function folderTabFill(hex) {
+/* Derive the folder's three surfaces from one base color (same offsets as the
+ * original engine): back/tab −30, frosted front +40 at 0.55, solid front +35.
+ * The solid variant is what keeps NON-active cards fully opaque — only the
+ * active card gets the translucent frosted treatment. */
+function folderColors(hex) {
   const [r, g, b] = hexToRgb(hex);
-  const o = 30;
-  return `rgb(${Math.max(r - o, 0)},${Math.max(g - o, 0)},${Math.max(b - o, 0)})`;
+  const dn = (v) => Math.max(v - 30, 0);
+  const up = (v, o) => Math.min(v + o, 255);
+  return {
+    back: `rgb(${dn(r)},${dn(g)},${dn(b)})`,
+    front: `rgba(${up(r, 40)},${up(g, 40)},${up(b, 40)},0.55)`,
+    frontSolid: `rgb(${up(r, 35)},${up(g, 35)},${up(b, 35)})`,
+  };
 }
 
 /* Built-in default content renderer. Accepts item.content (a Node or HTML
@@ -142,7 +151,12 @@ export function createFolderGallery(root, options = {}) {
     card.tabIndex = i === active ? 0 : -1; // roving tabindex
     card.setAttribute('role', 'option');
     card.setAttribute('aria-label', item.label || `Item ${i + 1}`);
-    if (item.color) card.style.setProperty('--fg-folder-bg', item.color);
+    if (item.color) {
+      const c = folderColors(item.color);
+      card.style.setProperty('--fg-folder-bg', item.color);
+      card.style.setProperty('--fg-front', c.front);
+      card.style.setProperty('--fg-front-solid', c.frontSolid);
+    }
 
     const svg = document.createElementNS(SVG_NS, 'svg');
     svg.setAttribute('class', 'fg-folder');
@@ -151,7 +165,7 @@ export function createFolderGallery(root, options = {}) {
     svg.setAttribute('aria-hidden', 'true');
     const path = document.createElementNS(SVG_NS, 'path');
     path.setAttribute('d', opts.folderPath);
-    path.setAttribute('fill', item.color ? folderTabFill(item.color) : 'var(--fg-folder-bg)');
+    path.setAttribute('fill', item.color ? folderColors(item.color).back : 'var(--fg-folder-bg)');
     svg.appendChild(path);
     card.appendChild(svg);
 

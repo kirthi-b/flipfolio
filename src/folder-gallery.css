@@ -1,26 +1,64 @@
 /* folder-gallery — default stylesheet (v0.1.0 · WIP)
- * Everything is themeable via the CSS custom properties on .fg-root below.
+ * Themeable via the custom properties on .fg-root. Light and dark are both
+ * first-class: `prefers-color-scheme` picks the default, and an explicit
+ * `data-fg-theme="light" | "dark"` on .fg-root always wins.
  * Scoped to .fg-* classes; ships no global selectors. */
 
 .fg-root {
-  /* ── theming tokens (override these) ── */
-  --fg-folder-bg: #2a3a3a;
-  --fg-radius: 8px;
+  /* ── structural tokens ── */
+  --fg-radius: 18px;
   --fg-perspective: 1200px;
-  --fg-transition: 320ms cubic-bezier(.2, .7, .2, 1);
-  --fg-front: rgba(20, 20, 22, .38);
-  --fg-front-active: rgba(20, 20, 22, .22);
-  --fg-active-blur: 10px;
-  --fg-label: #f4f4f2;
+  --fg-ease: cubic-bezier(0.2, 0, 0, 1);
+  --fg-transition-transform: 700ms;
+  --fg-transition-fade: 300ms;
+  --fg-active-blur: 12px;
+
+  /* ── surface tokens (dark defaults; light overrides below) ──
+     --fg-front / --fg-front-solid are normally set PER CARD by the engine,
+     derived from each item's color. These are the no-color fallbacks. */
+  --fg-folder-bg: #2a3a3a;
+  --fg-front: rgba(90, 90, 90, 0.55);
+  --fg-front-solid: rgb(115, 115, 115);
+  --fg-label: #ffffff;
   --fg-dot: #9a9a9a;
   --fg-dot-active: #f4f4f2;
-  --fg-scene-w: min(480px, 92vw);
+  --fg-shadow: 0 12px 32px rgba(0, 0, 0, 0.28), 0 4px 12px rgba(0, 0, 0, 0.12);
+  --fg-inset-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  --fg-inset-highlight-active: inset 0 1px 0 rgba(255, 255, 255, 0.15);
 
   position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 1rem;
+}
+
+@media (prefers-color-scheme: light) {
+  .fg-root {
+    --fg-label: #1c1c1a;
+    --fg-dot: #8a8a86;
+    --fg-dot-active: #1c1c1a;
+    --fg-shadow: 0 12px 32px rgba(30, 30, 30, 0.16), 0 4px 12px rgba(30, 30, 30, 0.08);
+    --fg-inset-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+    --fg-inset-highlight-active: inset 0 1px 0 rgba(255, 255, 255, 0.45);
+  }
+}
+/* Explicit theme attribute beats the media query in BOTH directions. */
+.fg-root[data-fg-theme='light'] {
+  --fg-label: #1c1c1a;
+  --fg-dot: #8a8a86;
+  --fg-dot-active: #1c1c1a;
+  --fg-shadow: 0 12px 32px rgba(30, 30, 30, 0.16), 0 4px 12px rgba(30, 30, 30, 0.08);
+  --fg-inset-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  --fg-inset-highlight-active: inset 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+.fg-root[data-fg-theme='dark'] {
+  --fg-label: #ffffff;
+  --fg-dot: #9a9a9a;
+  --fg-dot-active: #f4f4f2;
+  --fg-shadow: 0 12px 32px rgba(0, 0, 0, 0.28), 0 4px 12px rgba(0, 0, 0, 0.12);
+  --fg-inset-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  --fg-inset-highlight-active: inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 
 .fg-scene {
@@ -35,65 +73,91 @@
   position: absolute;
   inset: 0 0 auto 0;
   width: 100%;
-  aspect-ratio: 480 / 342;
-  transition: transform var(--fg-transition), opacity var(--fg-transition);
+  /* 3/2 matches the engine's layout math (cardH = cardW * 2/3); the folder
+     SVG stretches to fit via preserveAspectRatio="none". */
+  aspect-ratio: 3 / 2;
+  transition:
+    transform var(--fg-transition-transform) var(--fg-ease),
+    opacity var(--fg-transition-fade) var(--fg-ease);
+  transform-origin: center bottom;
+  backface-visibility: hidden;
+  will-change: transform;
   cursor: pointer;
-  contain: layout paint;
+  contain: layout;
   outline: none;
-  will-change: auto;
 }
 .fg-card.is-active { cursor: default; }
-.fg-card:focus-visible { outline: 2px solid var(--fg-dot-active); outline-offset: 4px; border-radius: var(--fg-radius); }
+.fg-card:focus-visible {
+  outline: 2px solid var(--fg-dot-active);
+  outline-offset: 4px;
+  border-radius: var(--fg-radius);
+}
 
 .fg-folder {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
-  filter: drop-shadow(0 8px 24px rgba(0, 0, 0, .28));
+  filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.22));
 }
 
 .fg-content {
   position: absolute;
-  left: 6%;
-  right: 6%;
-  top: 13%;
-  bottom: 20%;
+  left: 5%;
+  right: 5%;
+  top: 12%;
+  bottom: 30%;
   display: grid;
   place-items: center;
   overflow: hidden;
-  border-radius: var(--fg-radius);
-  background: rgba(255, 255, 255, .04);
+  border-radius: calc(var(--fg-radius) - 6px);
+  transition: transform var(--fg-transition-fade) var(--fg-ease);
+  z-index: 1;
 }
 .fg-image { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* Subtle pop: the active folder lifts its contents a touch on hover. */
+.fg-card.is-active:hover .fg-content { transform: translateY(-8px); }
 
+/* Front panel — the folder's face. Sits over the lower 3/4 like the original
+   (top 25%, hairline inset), radius 18. */
 .fg-front {
   position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 40%;
-  border-radius: 0 0 var(--fg-radius) var(--fg-radius);
-  background: var(--fg-front);
+  top: 25%;
+  left: 4px;
+  right: 4px;
+  bottom: 4px;
+  border-radius: var(--fg-radius);
+  overflow: hidden;
   display: flex;
   align-items: flex-end;
-  padding: .9rem 1rem;
-  transition: background var(--fg-transition), backdrop-filter var(--fg-transition);
+  padding: 0.9rem 1.1rem;
+  z-index: 2;
+  transition:
+    background var(--fg-transition-fade) var(--fg-ease),
+    box-shadow var(--fg-transition-fade) var(--fg-ease);
 }
-/* Frost the ACTIVE card only — backdrop-filter is expensive, don't stack it. */
+
+/* Behind folders: SOLID opaque front panel — no frosted glass off the active
+   card (both a design rule and a perf rule: backdrop-filter never stacks). */
+.fg-card:not(.is-active) .fg-front {
+  background: var(--fg-front-solid);
+  box-shadow: var(--fg-inset-highlight);
+}
 .fg-card.is-active .fg-front {
-  background: var(--fg-front-active);
+  background: var(--fg-front);
   backdrop-filter: blur(var(--fg-active-blur));
   -webkit-backdrop-filter: blur(var(--fg-active-blur));
+  box-shadow: var(--fg-shadow), var(--fg-inset-highlight-active);
 }
+
 .fg-label {
   color: var(--fg-label);
   font-weight: 600;
-  font-size: .95rem;
-  letter-spacing: .01em;
+  font-size: 0.95rem;
+  letter-spacing: 0.01em;
 }
 
-.fg-dots { display: flex; gap: .5rem; }
+.fg-dots { display: flex; gap: 0.5rem; }
 .fg-dot {
   width: 8px;
   height: 8px;
@@ -102,9 +166,13 @@
   padding: 0;
   cursor: pointer;
   background: var(--fg-dot);
-  opacity: .5;
-  transition: opacity var(--fg-transition), transform var(--fg-transition), background var(--fg-transition);
+  opacity: 0.5;
+  transition:
+    opacity var(--fg-transition-fade) var(--fg-ease),
+    transform var(--fg-transition-fade) var(--fg-ease),
+    background var(--fg-transition-fade) var(--fg-ease);
 }
+.fg-dot:hover { opacity: 0.85; }
 .fg-dot.is-active { background: var(--fg-dot-active); opacity: 1; transform: scale(1.35); }
 
 .fg-sr-only {
@@ -117,5 +185,5 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .fg-card { transition-duration: 1ms; }
+  .fg-card, .fg-content, .fg-front, .fg-dot { transition-duration: 1ms; }
 }
