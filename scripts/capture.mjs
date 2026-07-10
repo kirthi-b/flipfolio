@@ -52,6 +52,10 @@ const browser = await chromium.launch();
   await page.waitForTimeout(950);
   await page.click('button[data-mode="stack"]');                   // back to stack
   await page.waitForTimeout(1200);
+  await page.click('button[data-theme-pick="light"]');             // light theme (manila palette)
+  await page.waitForTimeout(1100);
+  await page.evaluate(() => document.getElementById('fg').next());
+  await page.waitForTimeout(1000);
   await page.close();
   await ctx.close(); // flushes the video file
   console.log('demo video recorded');

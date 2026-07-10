@@ -1,56 +1,98 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>folder-gallery example</title>
   <link rel="stylesheet" href="../src/folder-gallery.css">
   <style>
+    :root[data-theme='dark'] {
+      color-scheme: dark;
+      --bg: #14161a; --fg: #e8e8e6; --btn-bg: #23262c; --btn-border: #333; --btn-hover: #2c3038;
+    }
+    :root[data-theme='light'] {
+      color-scheme: light;
+      --bg: #f3f1ec; --fg: #1c1c1a; --btn-bg: #ffffff; --btn-border: #d8d4c8; --btn-hover: #eceade;
+    }
     body {
       margin: 0; min-height: 100vh; display: grid; place-items: center;
-      background: #14161a; color: #e8e8e6;
+      background: var(--bg); color: var(--fg);
       font: 15px/1.5 system-ui, sans-serif;
+      transition: background .3s, color .3s;
     }
     .wrap { display: flex; flex-direction: column; align-items: center; gap: 1.5rem; padding: 3rem 1rem; }
-    .modes { display: flex; gap: .5rem; }
-    .modes button {
-      background: #23262c; color: #e8e8e6; border: 1px solid #333;
+    .bar { display: flex; gap: .5rem; flex-wrap: wrap; justify-content: center; }
+    .bar button {
+      background: var(--btn-bg); color: var(--fg); border: 1px solid var(--btn-border);
       padding: .5rem .9rem; border-radius: 999px; cursor: pointer; font: inherit;
     }
-    .modes button:hover { background: #2c3038; }
+    .bar button:hover { background: var(--btn-hover); }
     /* demo content blocks so the example needs no image assets */
-    .demo-note { text-align: center; padding: 1rem; color: #cfcfcd; font-weight: 600; }
+    .demo-note { text-align: center; padding: 1rem; font-weight: 600; }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <div class="modes">
+    <div class="bar">
       <button data-mode="stack">Stack</button>
       <button data-mode="grid">Grid</button>
       <button data-mode="carousel">Carousel</button>
+      <button id="themeBtn">Light mode</button>
     </div>
-    <div id="gallery"></div>
+    <div id="gallery" data-fg-theme="dark"></div>
   </div>
 
   <script type="module">
     import { createFolderGallery } from '../src/folder-gallery.js';
 
-    const items = [
-      { label: 'One Corner',  color: '#2a3a3a', content: '<div class="demo-note">One Corner</div>' },
-      { label: 'Banglatown',  color: '#3d2e42', content: '<div class="demo-note">Banglatown</div>' },
-      { label: 'Diversity',   color: '#2a2d3e', content: '<div class="demo-note">Diversity</div>' },
-      { label: 'QoL NYC',     color: '#3a3d2f', content: '<div class="demo-note">QoL NYC</div>' },
-      { label: 'Noise NYC',   color: '#4a3030', content: '<div class="demo-note">Noise NYC</div>' },
-    ];
+    /* Two item sets: dark studio colors with light ink, manila with dark ink.
+       The gallery re-renders when the theme flips so both stay readable. */
+    const SETS = {
+      dark: {
+        ink: '#cfcfcd',
+        colors: { 'One Corner': '#2a3a3a', 'Banglatown': '#3d2e42', 'Diversity': '#2a2d3e', 'QoL NYC': '#3a3d2f', 'Noise NYC': '#4a3030' },
+      },
+      light: {
+        ink: '#3a3428',
+        colors: { 'One Corner': '#e8c96a', 'Banglatown': '#dd8f5e', 'Diversity': '#8fb5a3', 'QoL NYC': '#e2cf8f', 'Noise NYC': '#b58fb5' },
+      },
+    };
 
-    const gallery = createFolderGallery(document.getElementById('gallery'), {
-      items,
-      mode: 'stack',
-      onSelect: (item, i) => console.log('selected', item.label, i),
+    const root = document.getElementById('gallery');
+    let theme = 'dark';
+    let gallery = null;
+    let mode = 'stack';
+
+    function items() {
+      const s = SETS[theme];
+      return Object.entries(s.colors).map(([label, color]) => ({
+        label, color,
+        content: `<div class="demo-note" style="color:${s.ink}">${label}</div>`,
+      }));
+    }
+
+    function build() {
+      if (gallery) gallery.destroy();
+      root.setAttribute('data-fg-theme', theme);
+      gallery = createFolderGallery(root, {
+        items: items(),
+        mode,
+        onSelect: (item, i) => console.log('selected', item.label, i),
+      });
+    }
+
+    build();
+
+    document.querySelectorAll('[data-mode]').forEach((b) => {
+      b.addEventListener('click', () => { mode = b.dataset.mode; gallery.setMode(mode); });
     });
 
-    document.querySelectorAll('.modes button').forEach((b) => {
-      b.addEventListener('click', () => gallery.setMode(b.dataset.mode));
+    const themeBtn = document.getElementById('themeBtn');
+    themeBtn.addEventListener('click', () => {
+      theme = theme === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', theme);
+      themeBtn.textContent = theme === 'dark' ? 'Light mode' : 'Dark mode';
+      build();
     });
   </script>
 </body>

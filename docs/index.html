@@ -1,35 +1,64 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>folder-gallery playground</title>
   <link rel="stylesheet" href="../src/folder-gallery.css">
   <style>
-    :root { color-scheme: dark; }
     * { box-sizing: border-box; }
+    :root[data-theme='dark'] {
+      color-scheme: dark;
+      --page-bg: radial-gradient(1200px 600px at 50% -10%, #1c2230, #101216 60%);
+      --page-fg: #e9e9e6;
+      --page-muted: #a7adb8;
+      --page-faint: #7c828d;
+      --chip-bg: #191d24;
+      --chip-border: #2a2f38;
+      --chip-fg: #cfd3da;
+      --chip-hover: #232833;
+      --chip-active-bg: #e9e9e6;
+      --chip-active-fg: #14161a;
+      --kbd-bg: #20242c;
+      --kbd-border: #333;
+    }
+    :root[data-theme='light'] {
+      color-scheme: light;
+      --page-bg: radial-gradient(1200px 600px at 50% -10%, #faf8f2, #f3f1ec 60%);
+      --page-fg: #1c1c1a;
+      --page-muted: #4a463e;
+      --page-faint: #8a857a;
+      --chip-bg: #ffffff;
+      --chip-border: #d8d4c8;
+      --chip-fg: #3a3830;
+      --chip-hover: #eceade;
+      --chip-active-bg: #1c1c1a;
+      --chip-active-fg: #f3f1ec;
+      --kbd-bg: #eceade;
+      --kbd-border: #c9c4b4;
+    }
     body {
       margin: 0; min-height: 100vh;
-      background: radial-gradient(1200px 600px at 50% -10%, #1c2230, #101216 60%);
-      color: #e9e9e6;
+      background: var(--page-bg);
+      color: var(--page-fg);
       font: 15px/1.55 ui-sans-serif, system-ui, sans-serif;
+      transition: background .3s, color .3s;
     }
     main { max-width: 960px; margin: 0 auto; padding: 3.5rem 1.25rem 5rem; text-align: center; }
     h1 { font-size: clamp(1.8rem, 4vw, 2.6rem); margin: 0 0 .35rem; letter-spacing: -.02em; }
-    .tagline { color: #a7adb8; margin: 0 auto 2rem; max-width: 46ch; }
-    code { background: #20242c; padding: .1em .4em; border-radius: 4px; font-size: .9em; }
-    .controls { display: flex; flex-wrap: wrap; gap: 1.5rem; justify-content: center; margin-bottom: 2.5rem; }
-    .group { display: inline-flex; gap: .4rem; padding: .3rem; background: #191d24; border: 1px solid #2a2f38; border-radius: 999px; }
-    .group > span { align-self: center; color: #7c828d; font-size: .78rem; padding: 0 .5rem 0 .7rem; }
+    .tagline { color: var(--page-muted); margin: 0 auto 2rem; max-width: 46ch; }
+    .controls { display: flex; flex-wrap: wrap; gap: 1.25rem; justify-content: center; margin-bottom: 2.5rem; }
+    .group { display: inline-flex; gap: .4rem; padding: .3rem; background: var(--chip-bg); border: 1px solid var(--chip-border); border-radius: 999px; }
+    .group > span { align-self: center; color: var(--page-faint); font-size: .78rem; padding: 0 .5rem 0 .7rem; }
     .group button {
-      background: transparent; color: #cfd3da; border: 0; cursor: pointer;
+      background: transparent; color: var(--chip-fg); border: 0; cursor: pointer;
       padding: .45rem .85rem; border-radius: 999px; font: inherit; transition: background .15s, color .15s;
     }
-    .group button:hover { background: #232833; }
-    .group button.active { background: #e9e9e6; color: #14161a; }
+    .group button:hover { background: var(--chip-hover); }
+    .group button.active { background: var(--chip-active-bg); color: var(--chip-active-fg); }
     folder-gallery { margin-top: 1rem; min-height: 460px; }
-    .hint { color: #7c828d; font-size: .85rem; margin-top: 2rem; }
-    .hint kbd { background: #20242c; border: 1px solid #333; border-bottom-width: 2px; border-radius: 4px; padding: .05em .4em; }
+    .hint { color: var(--page-faint); font-size: .85rem; margin-top: 2rem; }
+    .hint kbd { background: var(--kbd-bg); border: 1px solid var(--kbd-border); border-bottom-width: 2px; border-radius: 4px; padding: .05em .4em; }
   </style>
 </head>
 <body>
@@ -38,6 +67,11 @@
     <p class="tagline">A 3D folder gallery that holds <em>real content</em>. Stack, grid, and carousel modes; keyboard, wheel, and touch; themeable; accessible.</p>
 
     <div class="controls">
+      <div class="group" role="group" aria-label="Theme">
+        <span>Theme</span>
+        <button data-theme-pick="dark" class="active">Dark</button>
+        <button data-theme-pick="light">Light</button>
+      </div>
       <div class="group" role="group" aria-label="View mode">
         <span>View</span>
         <button data-mode="stack" class="active">Stack</button>
@@ -46,13 +80,14 @@
       </div>
       <div class="group" role="group" aria-label="Palette">
         <span>Palette</span>
-        <button data-theme="studio" class="active">Studio</button>
-        <button data-theme="warm">Warm</button>
-        <button data-theme="mono">Mono</button>
+        <button data-palette="studio" class="active">Studio</button>
+        <button data-palette="warm">Warm</button>
+        <button data-palette="mono">Mono</button>
+        <button data-palette="manila">Manila</button>
       </div>
     </div>
 
-    <folder-gallery id="fg" mode="stack" label="Demo projects"></folder-gallery>
+    <folder-gallery id="fg" mode="stack" data-fg-theme="dark" label="Demo projects"></folder-gallery>
 
     <p class="hint">Hover the stack and use <kbd>&larr;</kbd> <kbd>&rarr;</kbd> or your scroll wheel. Click the front folder to select it.</p>
   </main>
@@ -63,36 +98,62 @@
 
     const fg = document.getElementById('fg');
 
+    /* Each palette carries its own content ink so folder interiors stay
+       readable on light and dark folder colors alike. */
     const PALETTES = {
-      studio: ['#2a3a3a', '#3d2e42', '#2a2d3e', '#3a3d2f', '#4a3030'],
-      warm:   ['#4a3030', '#5a3d2a', '#5a4a2a', '#4a2e42', '#3d2f2f'],
-      mono:   ['#3a3a3a', '#4a4a4a', '#2e2e2e', '#5a5a5a', '#252525'],
+      studio: { ink: '#eeeeee', colors: ['#2a3a3a', '#3d2e42', '#2a2d3e', '#3a3d2f', '#4a3030'] },
+      warm:   { ink: '#f2e8de', colors: ['#4a3030', '#5a3d2a', '#5a4a2a', '#4a2e42', '#3d2f2f'] },
+      mono:   { ink: '#e8e8e8', colors: ['#3a3a3a', '#4a4a4a', '#2e2e2e', '#5a5a5a', '#252525'] },
+      manila: { ink: '#3a3428', colors: ['#e8c96a', '#dd8f5e', '#8fb5a3', '#e2cf8f', '#b58fb5'] },
     };
     const TITLES = ['One Corner', 'Banglatown', 'Diversity', 'QoL NYC', 'Noise NYC'];
 
-    function buildItems(theme) {
-      const colors = PALETTES[theme];
+    let currentPalette = 'studio';
+
+    function buildItems(name) {
+      const p = PALETTES[name];
       return TITLES.map((t, i) => ({
         label: t,
-        color: colors[i % colors.length],
-        content: `<div style="font-weight:600;color:#eee">${t}</div>`,
+        color: p.colors[i % p.colors.length],
+        content: `<div style="font-weight:600;color:${p.ink}">${t}</div>`,
       }));
+    }
+
+    function setTheme(theme) {
+      document.documentElement.setAttribute('data-theme', theme);
+      fg.setAttribute('data-fg-theme', theme);
+      // Nudge the palette to the natural pairing when the user hasn't
+      // picked one that already suits the theme.
+      if (theme === 'light' && currentPalette !== 'manila') setPalette('manila');
+      if (theme === 'dark' && currentPalette === 'manila') setPalette('studio');
+    }
+
+    function setPalette(name) {
+      currentPalette = name;
+      fg.items = buildItems(name);
+      activate('[aria-label="Palette"]', document.querySelector(`[data-palette="${name}"]`));
+    }
+
+    function activate(groupSel, el) {
+      document.querySelectorAll(`${groupSel} button`).forEach((b) => b.classList.remove('active'));
+      if (el) el.classList.add('active');
     }
 
     fg.items = buildItems('studio');
     fg.addEventListener('fg-select', (e) => console.log('fg-select', e.detail.item.label, e.detail.index));
     fg.addEventListener('fg-modechange', (e) => console.log('fg-modechange', e.detail.mode));
 
-    function activate(groupSel, el) {
-      document.querySelectorAll(`${groupSel} button`).forEach((b) => b.classList.remove('active'));
-      el.classList.add('active');
-    }
-
+    document.querySelectorAll('[data-theme-pick]').forEach((b) => {
+      b.addEventListener('click', () => {
+        setTheme(b.dataset.themePick);
+        activate('[aria-label="Theme"]', b);
+      });
+    });
     document.querySelectorAll('[data-mode]').forEach((b) => {
       b.addEventListener('click', () => { fg.setMode(b.dataset.mode); activate('[aria-label="View mode"]', b); });
     });
-    document.querySelectorAll('[data-theme]').forEach((b) => {
-      b.addEventListener('click', () => { fg.items = buildItems(b.dataset.theme); activate('[aria-label="Palette"]', b); });
+    document.querySelectorAll('[data-palette]').forEach((b) => {
+      b.addEventListener('click', () => setPalette(b.dataset.palette));
     });
   </script>
 </body>
