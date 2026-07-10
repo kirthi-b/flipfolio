@@ -53,11 +53,11 @@
   <script type="module">
     import { createFolderGallery } from '../../src/folder-gallery.js';
     const items = [
-      { label: 'One Corner',  color: '#2a3a3a', content: '<div style="font-weight:600;color:#eee">One Corner</div>' },
-      { label: 'Banglatown',  color: '#3d2e42', content: '<div style="font-weight:600;color:#eee">Banglatown</div>' },
-      { label: 'Diversity',   color: '#2a2d3e', content: '<div style="font-weight:600;color:#eee">Diversity</div>' },
-      { label: 'QoL NYC',     color: '#3a3d2f', content: '<div style="font-weight:600;color:#eee">QoL NYC</div>' },
-      { label: 'Noise NYC',   color: '#4a3030', content: '<div style="font-weight:600;color:#eee">Noise NYC</div>' },
+      { label: 'Tokyo',       color: '#2a3a3a', content: '<div style="font-weight:600;color:#eee">Tokyo</div>' },
+      { label: 'Nairobi',     color: '#3d2e42', content: '<div style="font-weight:600;color:#eee">Nairobi</div>' },
+      { label: 'São Paulo',   color: '#2a2d3e', content: '<div style="font-weight:600;color:#eee">São Paulo</div>' },
+      { label: 'Copenhagen',  color: '#3a3d2f', content: '<div style="font-weight:600;color:#eee">Copenhagen</div>' },
+      { label: 'Mexico City', color: '#4a3030', content: '<div style="font-weight:600;color:#eee">Mexico City</div>' },
     ];
     for (const [id, mode, activeIdx] of [['fg-stack', 'stack', 0], ['fg-grid', 'grid', 1], ['fg-carousel', 'carousel', 2]]) {
       createFolderGallery(document.getElementById(id), {
