@@ -1,19 +1,21 @@
-# folder-gallery
+# flipfolio
 
 A gallery where every item is a folder: stack them, grid them, spin them.
 
 Started as a CSS 3D experiment; it now runs the [kirthi.studio](https://kirthi.studio) homepage. No framework, no dependencies.
 
+Live demo: [kirthi.studio/demos/flipfolio](https://kirthi.studio/demos/flipfolio/)
+
 > v0.1.0, work in progress. Private while it gets built out; not published to npm yet.
 
-![folder-gallery demo: stack, grid, and carousel modes](assets/demo.gif)
+![flipfolio demo: stack, grid, and carousel modes](assets/demo.gif)
 
 ## Quick start
 ```html
-<link rel="stylesheet" href="folder-gallery/styles.css">
+<link rel="stylesheet" href="flipfolio/styles.css">
 <div id="gallery"></div>
 <script type="module">
-  import { createFolderGallery } from 'folder-gallery';
+  import { createFolderGallery } from 'flipfolio';
 
   const gallery = createFolderGallery(document.getElementById('gallery'), {
     items: [
@@ -31,8 +33,8 @@ Started as a CSS 3D experiment; it now runs the [kirthi.studio](https://kirthi.s
 
 React:
 ```jsx
-import { FolderGallery } from 'folder-gallery/react';
-import 'folder-gallery/styles.css';
+import { FolderGallery } from 'flipfolio/react';
+import 'flipfolio/styles.css';
 
 <FolderGallery items={items} mode="grid" onSelect={(item, i) => open(item)} />
 ```
@@ -40,7 +42,7 @@ import 'folder-gallery/styles.css';
 Web component:
 ```html
 <script type="module">
-  import { defineFolderGallery } from 'folder-gallery/element';
+  import { defineFolderGallery } from 'flipfolio/element';
   defineFolderGallery();
 </script>
 <folder-gallery mode="carousel"></folder-gallery>
