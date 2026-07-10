@@ -31,14 +31,7 @@ const browser = await chromium.launch();
   const page = await ctx.newPage();
   await page.goto(`${BASE}/docs/index.html`);
   await page.waitForSelector('.fg-card');
-  // Tighten the layout so controls + gallery both fit the frame.
-  await page.evaluate(() => {
-    document.querySelector('main').style.paddingTop = '1.2rem';
-    document.querySelector('h1').style.display = 'none';
-    document.querySelector('.tagline').style.display = 'none';
-    document.querySelector('.hint').style.display = 'none';
-    window.scrollTo(0, 0);
-  });
+  // The sandbox layout already fits the viewport; nothing to hide.
   await page.waitForTimeout(900);                                  // settle on light manila stack
   await page.evaluate(() => document.getElementById('fg').next());
   await page.waitForTimeout(950);
