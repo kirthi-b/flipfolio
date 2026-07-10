@@ -1,33 +1,16 @@
 # folder-gallery
 
-> **v0.1.0, work in progress.** Private while it gets built out; not published to npm yet.
+A gallery where every item is a folder: stack them, grid them, spin them.
 
-A framework-agnostic 3D folder gallery for the web. Items render as manila folders you can browse in stack, grid, or carousel mode. No framework, no dependencies.
+Started as a CSS 3D experiment; it now runs the [kirthi.studio](https://kirthi.studio) homepage. No framework, no dependencies.
 
-> _[Kirthi writes the real pitch here, in her voice, before launch. Everything below is factual scaffolding.]_
+> v0.1.0, work in progress. Private while it gets built out; not published to npm yet.
 
 ![folder-gallery demo: stack, grid, and carousel modes](assets/demo.gif)
 
-## What it looks like
-
-![Six manila folders in a grid, each holding a real project image](assets/showcase/real-content.png)
-Folders hold your actual content. These are live project images, loaded with `item.src`.
-
-![The same five folders laid out as a stack, a grid, and a carousel](assets/showcase/modes.png)
-One items array, three layouts. `setMode()` animates between them at runtime.
-
-![Four folders holding a photo, a text document, an SVG chart, and a custom-rendered card](assets/showcase/any-content.png)
-Interiors take images, markup, DOM nodes, or a `contentRenderer` for anything else.
-
-![Three folder silhouettes: the default left tab, a right tab with sharp corners, and a tabless tray](assets/showcase/customize.png)
-Per-folder tab colors, tokens for radius and blur, and the silhouette itself is one SVG path.
-
-## Status
-This is the extracted core, ported from the hand-built portfolio engine and adapted to own its own DOM and tear down cleanly. Done so far: dual ESM/CJS build with types, a `<folder-gallery>` web component, a React wrapper, 27 tests, light and dark themes, and the playground in `docs/`. Left before publish: the hero copy, an optional docs site, and the npm/shadcn-registry release. See `~/Documents/notes/folder-widget-plan.md`.
-
 ## Quick start
 ```html
-<link rel="stylesheet" href="folder-gallery/src/folder-gallery.css">
+<link rel="stylesheet" href="folder-gallery/styles.css">
 <div id="gallery"></div>
 <script type="module">
   import { createFolderGallery } from 'folder-gallery';
@@ -46,10 +29,40 @@ This is the extracted core, ported from the hand-built portfolio engine and adap
 </script>
 ```
 
+React:
+```jsx
+import { FolderGallery } from 'folder-gallery/react';
+import 'folder-gallery/styles.css';
+
+<FolderGallery items={items} mode="grid" onSelect={(item, i) => open(item)} />
+```
+
+Web component:
+```html
+<script type="module">
+  import { defineFolderGallery } from 'folder-gallery/element';
+  defineFolderGallery();
+</script>
+<folder-gallery mode="carousel"></folder-gallery>
+<script>document.querySelector('folder-gallery').items = items;</script>
+```
+
+## What it looks like
+
+![Six manila folders in a grid, each holding a real project image](assets/showcase/real-content.png)
+Folders hold your actual content. These are live project images, loaded with `item.src`.
+
+![The same five folders laid out as a stack, a grid, and a carousel](assets/showcase/modes.png)
+One items array, three layouts. `setMode()` animates between them at runtime.
+
+![Four folders holding a photo, a text document, an SVG chart, and a custom-rendered card](assets/showcase/any-content.png)
+Interiors take images, markup, DOM nodes, or a `contentRenderer` for anything else.
+
+![Three folder silhouettes: the default left tab, a right tab with sharp corners, and a tabless tray](assets/showcase/customize.png)
+Per-folder tab colors, tokens for radius and blur, and the silhouette itself is one SVG path.
+
 ## API
 `createFolderGallery(rootElement, options) -> handle`
-
-**Options**
 
 | option | type | default | notes |
 |---|---|---|---|
@@ -64,18 +77,21 @@ This is the extracted core, ported from the hand-built portfolio engine and adap
 | `defaultActiveIndex` | `number` | `0` | |
 | `label` | `string` | `'Folder gallery'` | `aria-label` for the listbox |
 
-**Handle**: `next()`, `prev()`, `goTo(i)`, `setMode(m)`, `getActiveIndex()`, `getMode()`, `destroy()`.
+Handle: `next()`, `prev()`, `goTo(i)`, `setMode(m)`, `getActiveIndex()`, `getMode()`, `destroy()`.
 
-**Events** (CustomEvent on the root, bubbling): `fg-select`, `fg-activechange`, `fg-modechange`, each with `event.detail`.
+Events (CustomEvent on the root, bubbling): `fg-select`, `fg-activechange`, `fg-modechange`, each with `event.detail`.
 
 ## Content
-Decorative folder components hard-code two or three images. This one takes an items array and renders what you give it: `item.src` for an image, `item.content` for an HTML string or a DOM node, or a consumer `contentRenderer(card, item, index)` for anything richer.
+Each folder renders what you give it: `item.src` for an image, `item.content` for an HTML string or a DOM node, or a `contentRenderer(card, item, index)` for anything richer.
 
 ## Accessibility
 `role="listbox"`/`option`, roving tabindex, arrow-key + Home/End navigation, `aria-live` position announcements, `:focus-visible` rings, and a `prefers-reduced-motion` fallback that drops the 3D tilt.
 
 ## Theming
 Override the CSS custom properties on `.fg-root`: `--fg-folder-bg`, `--fg-radius`, `--fg-perspective`, `--fg-ease`, `--fg-front`, `--fg-front-solid`, `--fg-active-blur`, `--fg-label`, `--fg-dot`, `--fg-dot-active`. Light and dark both work out of the box: `prefers-color-scheme` sets the default, and `data-fg-theme="light"` or `"dark"` on `.fg-root` overrides it.
+
+## Limits
+Client-rendered only: folders paint after JS runs, there is no SSR of the layout itself. Every folder is a live 3D layer, so the sweet spot is 12 items or fewer, not hundreds. Uses `aspect-ratio` and `backdrop-filter`: evergreen browsers only, no IE fallback.
 
 ## License
 MIT © Kirthi Balakrishnan
