@@ -99,6 +99,7 @@
     }
     .opts button:hover { background: var(--chip-hover); }
     .opts button.active { background: var(--chip-active-bg); color: var(--chip-active-fg); border-color: var(--chip-active-bg); }
+    .group.is-disabled { opacity: .4; pointer-events: none; }
 
     /* ── canvas: the sandbox stage ── */
     .canvas {
@@ -215,7 +216,7 @@
           <button id="peekBtn">Peek</button>
         </div>
       </div>
-      <div class="group" role="group" aria-label="Palette">
+      <div class="group" role="group" aria-label="Palette" id="paletteGroup">
         <span>Palette</span>
         <div class="opts">
           <button data-palette="studio">Studio</button>
@@ -248,6 +249,17 @@
       warm:   { colors: ['#4a3030', '#5a3d2a', '#5a4a2a', '#4a2e42', '#3d2f2f'] },
       mono:   { colors: ['#3a3a3a', '#4a4a4a', '#2e2e2e', '#5a5a5a', '#252525'] },
       manila: { colors: ['#e8c96a', '#dd8f5e', '#8fb5a3', '#e2cf8f', '#b58fb5'] },
+    };
+    // Photo mode ties the tab/back to a tone pulled from each city's own
+    // photo, so the folder reads as part of the picture instead of an
+    // arbitrary palette swatch behind it. The Palette picker is disabled
+    // while a decal is showing, since it would otherwise fight this.
+    const PHOTO_COLORS = {
+      'tokyo': '#13303f',
+      'nairobi': '#786f52',
+      'sao-paulo': '#8a7259',
+      'copenhagen': '#4f6b7c',
+      'mexico-city': '#3d7dae',
     };
     const CITIES = [
       { label: 'Tokyo',       slug: 'tokyo',       flower: 'Sakura',     flowerImg: 'sakura',
@@ -284,7 +296,8 @@
     function buildItems() {
       const p = PALETTES[currentPalette];
       return CITIES.map((c, i) => {
-        const base = { label: c.label, color: p.colors[i % p.colors.length] };
+        const color = contentMode === 'photos' ? PHOTO_COLORS[c.slug] : p.colors[i % p.colors.length];
+        const base = { label: c.label, color };
         if (contentMode === 'photos') base.decal = `./photos/${c.slug}.jpg`;
         // Folders are empty until Peek is on; the peek pair is the contents.
         if (peekOn) base.content = peekPair(c);
@@ -350,11 +363,13 @@
         updateReadout();
       });
     });
+    const paletteGroup = document.getElementById('paletteGroup');
     document.querySelectorAll('[data-content]').forEach((b) => {
       b.addEventListener('click', () => {
         contentMode = b.dataset.content;
         rebuild();
         document.querySelectorAll('[data-content]').forEach((x) => x.classList.toggle('active', x === b));
+        paletteGroup.classList.toggle('is-disabled', contentMode === 'photos');
       });
     });
     const peekBtn = document.getElementById('peekBtn');
