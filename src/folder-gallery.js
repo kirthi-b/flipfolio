@@ -243,8 +243,9 @@ export function createFolderGallery(root, options = {}) {
     });
   }
   function layoutGrid() {
-    const cols = n <= 4 ? 2 : 3;
     const sceneW = scene.clientWidth || MODE_WIDTHS.grid;
+    // Two columns on narrow scenes so folders stay tappable and readable.
+    const cols = sceneW < 520 ? 2 : n <= 4 ? 2 : 3;
     const gap = 16;
     const cardW = sceneW;
     const cardH = sceneW * (2 / 3);
@@ -365,11 +366,23 @@ export function createFolderGallery(root, options = {}) {
     }, { passive: false });
   }
 
+  /* Dominant-axis swipe: up or left advances, down or right goes back.
+     Horizontal is the natural phone gesture in carousel; vertical matches
+     the wheel direction on the stack. Both work everywhere. */
+  let touchStartX = 0;
   let touchStartY = 0;
-  on(scene, 'touchstart', (e) => { touchStartY = e.touches[0].clientY; }, { passive: true });
+  on(scene, 'touchstart', (e) => {
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+  }, { passive: true });
   on(scene, 'touchend', (e) => {
+    const dx = touchStartX - e.changedTouches[0].clientX;
     const dy = touchStartY - e.changedTouches[0].clientY;
-    if (Math.abs(dy) > 40) goTo(active + (dy > 0 ? 1 : -1));
+    const ax = Math.abs(dx);
+    const ay = Math.abs(dy);
+    if (Math.max(ax, ay) < 40) return;
+    const dir = ax > ay ? (dx > 0 ? 1 : -1) : (dy > 0 ? 1 : -1);
+    goTo(active + dir);
   }, { passive: true });
 
   let resizeTimer;

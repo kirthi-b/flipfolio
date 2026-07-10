@@ -157,8 +157,10 @@
     .pol--fact p { font-size: .82rem; line-height: 1.5; color: #55503f; margin: 0; }
 
     /* ── narrow screens: rail becomes a wrap of chips above the canvas ── */
+    .keys--touch { display: none; }
     @media (max-width: 860px) {
       .bar .tag, .bar .keys { display: none; }
+      .bar .keys--touch { display: block; margin-left: auto; }
       main { flex-direction: column; }
       .panel {
         flex: 0 0 auto;
@@ -181,6 +183,7 @@
     <h1>flipfolio</h1>
     <span class="tag">A 3D folder gallery that holds real content.</span>
     <span class="keys"><kbd>&larr;</kbd> <kbd>&rarr;</kbd> or scroll to browse; click the front folder to select</span>
+    <span class="keys keys--touch">swipe to browse, tap to select</span>
   </header>
 
   <main>
