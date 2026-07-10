@@ -136,8 +136,12 @@
     .readout:hover { color: var(--page-fg); }
 
     /* ── peek contents: a flower polaroid + a city fact card ── */
-    #fg.fg-root { --fg-peek-shift: -64%; }
-    folder-gallery .fg-content { overflow: visible; }
+    #fg.fg-root { --fg-peek-shift: -72%; }
+    /* Contents stay clipped inside the folder at rest; the box only opens up
+       while it is actually peeked, so tilted corners can hang out. */
+    [data-fg-peek='always'] .fg-card.is-active .fg-content,
+    [data-fg-peek='hover'] .fg-card.is-active:hover .fg-content,
+    [data-fg-peek='hover'][data-fg-mode='grid'] .fg-card:hover .fg-content { overflow: visible; }
     .peek-pair {
       display: flex; gap: 16px; align-items: center; justify-content: center;
       width: 100%; height: 100%;

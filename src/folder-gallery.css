@@ -132,15 +132,18 @@
 /* ── peek: contents slide out of the folder ──
    data-fg-peek on the root: 'hover' (default), 'always', or 'off'.
    'off' keeps a subtle lift so hover still gives feedback. */
+/* Empty interiors are inert: no box to lift, no shadow to cast. */
+.fg-content:empty { display: none; }
+
 [data-fg-peek='off'] .fg-card.is-active:hover .fg-content { transform: translateY(-8px); }
-/* 'always' peeks the active card only, so the stack stays calm; grid peeks
-   every card since they are all equally in view. */
+/* Peek moves the ACTIVE card's contents only, in every mode; grid also peeks
+   whichever card is hovered. No shadow on the content box itself: the box is
+   transparent around whatever it holds, so a box shadow reads as a floating
+   empty sheet. Contents bring their own shadows. */
 [data-fg-peek='hover'] .fg-card.is-active:hover .fg-content,
 [data-fg-peek='hover'][data-fg-mode='grid'] .fg-card:hover .fg-content,
-[data-fg-peek='always'] .fg-card.is-active .fg-content,
-[data-fg-peek='always'][data-fg-mode='grid'] .fg-card .fg-content {
+[data-fg-peek='always'] .fg-card.is-active .fg-content {
   transform: translateY(var(--fg-peek-shift));
-  box-shadow: var(--fg-shadow);
 }
 
 /* Front panel - the folder's face. Sits over the lower 3/4 like the original
