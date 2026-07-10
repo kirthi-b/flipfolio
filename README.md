@@ -8,6 +8,20 @@ A framework-agnostic 3D folder gallery for the web. Items render as manila folde
 
 ![folder-gallery demo: stack, grid, and carousel modes](assets/demo.gif)
 
+## What it looks like
+
+![Six manila folders in a grid, each holding a real project image](assets/showcase/real-content.png)
+Folders hold your actual content. These are live project images, loaded with `item.src`.
+
+![The same five folders laid out as a stack, a grid, and a carousel](assets/showcase/modes.png)
+One items array, three layouts. `setMode()` animates between them at runtime.
+
+![Four folders holding a photo, a text document, an SVG chart, and a custom-rendered card](assets/showcase/any-content.png)
+Interiors take images, markup, DOM nodes, or a `contentRenderer` for anything else.
+
+![Three folder silhouettes: the default left tab, a right tab with sharp corners, and a tabless tray](assets/showcase/customize.png)
+Per-folder tab colors, tokens for radius and blur, and the silhouette itself is one SVG path.
+
 ## Status
 This is the extracted core, ported from the hand-built portfolio engine and adapted to own its own DOM and tear down cleanly. Done so far: dual ESM/CJS build with types, a `<folder-gallery>` web component, a React wrapper, 27 tests, light and dark themes, and the playground in `docs/`. Left before publish: the hero copy, an optional docs site, and the npm/shadcn-registry release. See `~/Documents/notes/folder-widget-plan.md`.
 

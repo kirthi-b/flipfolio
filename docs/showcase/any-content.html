@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>showcase: any content</title>
+  <link rel="stylesheet" href="../../src/folder-gallery.css">
+  <style>
+    * { box-sizing: border-box; margin: 0; }
+    html, body { width: 1760px; height: 820px; overflow: hidden; }
+    body {
+      background: radial-gradient(1400px 650px at 50% -10%, #1c2230, #101216 60%);
+      color: #e9e9e6;
+      font: 16px/1.5 ui-sans-serif, system-ui, "Helvetica Neue", sans-serif;
+    }
+    header { text-align: center; padding-top: 60px; }
+    h2 { font-size: 52px; font-weight: 750; letter-spacing: -0.03em; }
+    header p { color: #a7adb8; font-size: 20px; margin-top: 10px; }
+    header code { font: 17px/1 ui-monospace, monospace; background: #20242c; padding: 3px 9px; border-radius: 6px; }
+    .row { display: flex; justify-content: center; gap: 40px; margin-top: 130px; }
+    .mini { display: flex; flex-direction: column; align-items: center; }
+    .mini .fg-scene { width: 350px !important; height: 350px; }
+    .mini .fg-dots { display: none; }
+    .fg-root { --fg-transition-transform: 1ms; --fg-transition-fade: 1ms; }
+    .mini .cap { margin-top: 16px; font: 15px/1 ui-monospace, monospace; color: #7c828d; }
+    /* Lift the contents out of the folder so each type reads clearly;
+       inset from the left so the folder tab stays visible. */
+    .mini .fg-content {
+      top: -40%; bottom: 44%; left: 18%; right: 6%;
+      border-radius: 8px;
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.4);
+      background: #fdfcf9;
+      padding: 6px;
+    }
+    /* Poster still: solid fronts, no frost smear behind the lifted content. */
+    .mini .fg-card .fg-front {
+      background: var(--fg-front-solid);
+      backdrop-filter: none; -webkit-backdrop-filter: none;
+      box-shadow: var(--fg-inset-highlight);
+    }
+    /* content cards */
+    .doc { width: 100%; height: 100%; background: #fdfcf9; color: #2a2822; padding: 16px 18px; text-align: left; overflow: hidden; }
+    .doc h4 { font-size: 15px; margin-bottom: 8px; }
+    .doc p { font-size: 12.5px; line-height: 1.55; color: #55503f; }
+    .chart { width: 100%; height: 100%; background: #fdfcf9; padding: 12px 14px; text-align: left; }
+    .chart h4 { font-size: 14px; color: #2a2822; margin-bottom: 6px; }
+    .media { position: relative; width: 100%; height: 100%; }
+    .media img { width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 4px; }
+    .media .badge {
+      position: absolute; left: 8px; bottom: 8px;
+      background: rgba(20, 20, 22, 0.78); color: #f4f4f2;
+      font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 999px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h2>Folders hold anything</h2>
+    <p><code>item.src</code> for images, <code>item.content</code> for markup or a DOM node, <code>contentRenderer</code> for everything else.</p>
+  </header>
+  <div class="row">
+    <div class="mini"><div id="m1" data-fg-theme="dark"></div><div class="cap">item.src</div></div>
+    <div class="mini"><div id="m2" data-fg-theme="dark"></div><div class="cap">item.content: document</div></div>
+    <div class="mini"><div id="m3" data-fg-theme="dark"></div><div class="cap">item.content: SVG chart</div></div>
+    <div class="mini"><div id="m4" data-fg-theme="dark"></div><div class="cap">contentRenderer</div></div>
+  </div>
+  <script type="module">
+    import { createFolderGallery } from '../../src/folder-gallery.js';
+
+    const one = (id, item, renderer) => createFolderGallery(document.getElementById(id), {
+      items: [item], mode: 'stack', reducedMotion: 'force', contentRenderer: renderer,
+    });
+
+    one('m1', { label: 'Site photos', color: '#2a3a3a', src: 'https://kirthi.studio/images/projects/cv-ethnography.png' });
+
+    one('m2', {
+      label: 'Field notes', color: '#3d2e42',
+      content: `<div class="doc">
+        <h4>Tract 5023.02, site visit</h4>
+        <p>Median rent up 12% since 2019. 41% of parcels sit within 800m of the busway.
+        Corner grocer reports foot traffic doubling after the curb extension went in.
+        Three vacant storefronts on the south block, one permit pending.</p>
+      </div>`,
+    });
+
+    one('m3', {
+      label: 'Mode share', color: '#2a2d3e',
+      content: `<div class="chart">
+        <h4>Trips by mode</h4>
+        <svg viewBox="0 0 300 110" width="100%">
+          <g font-size="11" fill="#55503f" font-family="ui-monospace,monospace">
+            <rect x="70" y="8"  width="188" height="16" fill="#1f6f6f"/><text x="2" y="20">Transit</text><text x="264" y="20">47%</text>
+            <rect x="70" y="32" width="120" height="16" fill="#5aa3a3"/><text x="2" y="44">Walk</text><text x="196" y="44">30%</text>
+            <rect x="70" y="56" width="52"  height="16" fill="#9ccaca"/><text x="2" y="68">Bike</text><text x="128" y="68">13%</text>
+            <rect x="70" y="80" width="40"  height="16" fill="#cfe4e4"/><text x="2" y="92">Drive</text><text x="116" y="92">10%</text>
+          </g>
+        </svg>
+      </div>`,
+    });
+
+    one('m4', { label: 'August flows', color: '#3a3d2f' }, (card, item) => {
+      const wrap = document.createElement('div');
+      wrap.className = 'fg-content';
+      wrap.innerHTML = `<div class="media">
+        <img src="https://kirthi.studio/images/projects/citibike/august.png" alt="">
+        <span class="badge">4.1M trips</span>
+      </div>`;
+      card.appendChild(wrap);
+    });
+  </script>
+</body>
+</html>
