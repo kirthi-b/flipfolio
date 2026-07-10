@@ -39,7 +39,7 @@ const browser = await chromium.launch();
     document.querySelector('.hint').style.display = 'none';
     window.scrollTo(0, 0);
   });
-  await page.waitForTimeout(900);                                  // settle on stack
+  await page.waitForTimeout(900);                                  // settle on light manila stack
   await page.evaluate(() => document.getElementById('fg').next());
   await page.waitForTimeout(950);
   await page.evaluate(() => document.getElementById('fg').next());
@@ -48,14 +48,17 @@ const browser = await chromium.launch();
   await page.waitForTimeout(1250);
   await page.click('button[data-mode="carousel"]');                // grid -> carousel
   await page.waitForTimeout(1150);
+  await page.click('button[data-mode="stack"]');                   // back to stack
+  await page.waitForTimeout(1100);
+  await page.click('button[data-content="photos"]');               // photo decals
+  await page.waitForLoadState('networkidle');
+  await page.waitForTimeout(1200);
+  await page.click('#peekBtn');                                    // peek: contents slide out
+  await page.waitForTimeout(1000);
   await page.evaluate(() => document.getElementById('fg').next());
   await page.waitForTimeout(950);
-  await page.click('button[data-mode="stack"]');                   // back to stack
-  await page.waitForTimeout(1200);
-  await page.click('button[data-theme-pick="light"]');             // light theme (manila palette)
+  await page.click('button[data-theme-pick="dark"]');              // dark studio to close
   await page.waitForTimeout(1100);
-  await page.evaluate(() => document.getElementById('fg').next());
-  await page.waitForTimeout(1000);
   await page.close();
   await ctx.close(); // flushes the video file
   console.log('demo video recorded');

@@ -13,18 +13,20 @@
   --fg-transition-fade: 300ms;
   --fg-active-blur: 12px;
 
-  /* ── surface tokens (dark defaults; light overrides below) ──
+  /* ── surface tokens (LIGHT is the base; dark overrides below) ──
      --fg-front / --fg-front-solid are normally set PER CARD by the engine,
      derived from each item's color. These are the no-color fallbacks. */
-  --fg-folder-bg: #2a3a3a;
-  --fg-front: rgba(90, 90, 90, 0.55);
-  --fg-front-solid: rgb(115, 115, 115);
-  --fg-label: #ffffff;
-  --fg-dot: #9a9a9a;
-  --fg-dot-active: #f4f4f2;
-  --fg-shadow: 0 12px 32px rgba(0, 0, 0, 0.28), 0 4px 12px rgba(0, 0, 0, 0.12);
-  --fg-inset-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.12);
-  --fg-inset-highlight-active: inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  --fg-folder-bg: #e8c96a;
+  --fg-front: rgba(255, 255, 255, 0.55);
+  --fg-front-solid: rgb(240, 236, 224);
+  --fg-label: #1c1c1a;
+  --fg-dot: #8a8a86;
+  --fg-dot-active: #1c1c1a;
+  --fg-shadow: 0 12px 32px rgba(30, 30, 30, 0.16), 0 4px 12px rgba(30, 30, 30, 0.08);
+  --fg-inset-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  --fg-inset-highlight-active: inset 0 1px 0 rgba(255, 255, 255, 0.45);
+  /* peek: how far contents slide out of the folder */
+  --fg-peek-shift: -46%;
 
   position: relative;
   display: flex;
@@ -33,18 +35,24 @@
   gap: 1rem;
 }
 
-@media (prefers-color-scheme: light) {
+@media (prefers-color-scheme: dark) {
   .fg-root {
-    --fg-label: #1c1c1a;
-    --fg-dot: #8a8a86;
-    --fg-dot-active: #1c1c1a;
-    --fg-shadow: 0 12px 32px rgba(30, 30, 30, 0.16), 0 4px 12px rgba(30, 30, 30, 0.08);
-    --fg-inset-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.35);
-    --fg-inset-highlight-active: inset 0 1px 0 rgba(255, 255, 255, 0.45);
+    --fg-folder-bg: #2a3a3a;
+    --fg-front: rgba(90, 90, 90, 0.55);
+    --fg-front-solid: rgb(115, 115, 115);
+    --fg-label: #ffffff;
+    --fg-dot: #9a9a9a;
+    --fg-dot-active: #f4f4f2;
+    --fg-shadow: 0 12px 32px rgba(0, 0, 0, 0.28), 0 4px 12px rgba(0, 0, 0, 0.12);
+    --fg-inset-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    --fg-inset-highlight-active: inset 0 1px 0 rgba(255, 255, 255, 0.15);
   }
 }
 /* Explicit theme attribute beats the media query in BOTH directions. */
 .fg-root[data-fg-theme='light'] {
+  --fg-folder-bg: #e8c96a;
+  --fg-front: rgba(255, 255, 255, 0.55);
+  --fg-front-solid: rgb(240, 236, 224);
   --fg-label: #1c1c1a;
   --fg-dot: #8a8a86;
   --fg-dot-active: #1c1c1a;
@@ -53,6 +61,9 @@
   --fg-inset-highlight-active: inset 0 1px 0 rgba(255, 255, 255, 0.45);
 }
 .fg-root[data-fg-theme='dark'] {
+  --fg-folder-bg: #2a3a3a;
+  --fg-front: rgba(90, 90, 90, 0.55);
+  --fg-front-solid: rgb(115, 115, 115);
   --fg-label: #ffffff;
   --fg-dot: #9a9a9a;
   --fg-dot-active: #f4f4f2;
@@ -111,12 +122,23 @@
   place-items: center;
   overflow: hidden;
   border-radius: calc(var(--fg-radius) - 6px);
-  transition: transform var(--fg-transition-fade) var(--fg-ease);
+  transition:
+    transform var(--fg-transition-fade) var(--fg-ease),
+    box-shadow var(--fg-transition-fade) var(--fg-ease);
   z-index: 1;
 }
 .fg-image { width: 100%; height: 100%; object-fit: cover; display: block; }
-/* Subtle pop: the active folder lifts its contents a touch on hover. */
-.fg-card.is-active:hover .fg-content { transform: translateY(-8px); }
+
+/* ── peek: contents slide out of the folder ──
+   data-fg-peek on the root: 'hover' (default), 'always', or 'off'.
+   'off' keeps a subtle lift so hover still gives feedback. */
+[data-fg-peek='off'] .fg-card.is-active:hover .fg-content { transform: translateY(-8px); }
+[data-fg-peek='hover'] .fg-card.is-active:hover .fg-content,
+[data-fg-peek='hover'][data-fg-mode='grid'] .fg-card:hover .fg-content,
+[data-fg-peek='always'] .fg-card .fg-content {
+  transform: translateY(var(--fg-peek-shift));
+  box-shadow: var(--fg-shadow);
+}
 
 /* Front panel - the folder's face. Sits over the lower 3/4 like the original
    (top 25%, hairline inset), radius 18. */
@@ -149,6 +171,21 @@
   -webkit-backdrop-filter: blur(var(--fg-active-blur));
   box-shadow: var(--fg-shadow), var(--fg-inset-highlight-active);
 }
+
+/* ── decal: the folder is skinned with an image (item.decal) ──
+   The image is clipped to the silhouette inside the SVG; the front panel
+   becomes a label scrim so the photo shows through and the label stays
+   readable. Overrides both the solid and frosted front treatments. */
+.fg-card--decal .fg-front,
+.fg-card--decal:not(.is-active) .fg-front,
+.fg-card--decal.is-active .fg-front {
+  background: linear-gradient(to top, rgba(12, 12, 14, 0.62), rgba(12, 12, 14, 0) 65%);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: none;
+}
+.fg-card--decal.is-active .fg-front { box-shadow: var(--fg-shadow); }
+.fg-card--decal .fg-label { color: #ffffff; }
 
 .fg-label {
   color: var(--fg-label);

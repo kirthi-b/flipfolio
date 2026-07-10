@@ -7,11 +7,14 @@ export interface FolderItem {
   src?: string;
   /** Arbitrary interior content: an HTML string or a DOM node. */
   content?: string | Node;
+  /** Image URL skinned across the whole folder silhouette, tab included. */
+  decal?: string;
   /** Any extra data - passed through to onSelect. */
   [key: string]: unknown;
 }
 
 export type GalleryMode = 'stack' | 'grid' | 'carousel';
+export type PeekMode = 'hover' | 'always' | 'off';
 
 export interface FolderGalleryOptions {
   items?: FolderItem[];
@@ -25,6 +28,8 @@ export interface FolderGalleryOptions {
   loop?: boolean;
   scrollNav?: boolean;
   reducedMotion?: 'auto' | 'off' | 'force';
+  /** Contents sliding out of the folder: on hover (default), always, or off. */
+  peek?: PeekMode;
   defaultActiveIndex?: number;
   /** aria-label for the listbox. */
   label?: string;
@@ -35,6 +40,7 @@ export interface FolderGalleryHandle {
   prev(): void;
   goTo(index: number): void;
   setMode(mode: GalleryMode): void;
+  setPeek(peek: PeekMode): void;
   getActiveIndex(): number;
   getMode(): GalleryMode;
   /** Removes every listener and empties the root element. */

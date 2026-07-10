@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -37,9 +37,9 @@
       <button data-mode="stack">Stack</button>
       <button data-mode="grid">Grid</button>
       <button data-mode="carousel">Carousel</button>
-      <button id="themeBtn">Light mode</button>
+      <button id="themeBtn">Dark mode</button>
     </div>
-    <div id="gallery" data-fg-theme="dark"></div>
+    <div id="gallery" data-fg-theme="light"></div>
   </div>
 
   <script type="module">
@@ -59,7 +59,7 @@
     };
 
     const root = document.getElementById('gallery');
-    let theme = 'dark';
+    let theme = 'light';
     let gallery = null;
     let mode = 'stack';
 

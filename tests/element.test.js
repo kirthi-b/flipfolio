@@ -61,3 +61,15 @@ describe('<folder-gallery> custom element', () => {
     expect(el.children.length).toBe(0);
   });
 });
+
+describe('peek attribute', () => {
+  it('drives the core without a rebuild', () => {
+    const el = document.createElement('folder-gallery');
+    el.items = ITEMS;
+    document.body.appendChild(el);
+    const cardBefore = el.querySelector('.fg-card');
+    el.setAttribute('peek', 'always');
+    expect(el.getAttribute('data-fg-peek')).toBe('always');
+    expect(el.querySelector('.fg-card')).toBe(cardBefore);
+  });
+});

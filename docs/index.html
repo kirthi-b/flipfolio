@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -69,8 +69,8 @@
     <div class="controls">
       <div class="group" role="group" aria-label="Theme">
         <span>Theme</span>
-        <button data-theme-pick="dark" class="active">Dark</button>
-        <button data-theme-pick="light">Light</button>
+        <button data-theme-pick="light" class="active">Light</button>
+        <button data-theme-pick="dark">Dark</button>
       </div>
       <div class="group" role="group" aria-label="View mode">
         <span>View</span>
@@ -78,16 +78,22 @@
         <button data-mode="grid">Grid</button>
         <button data-mode="carousel">Carousel</button>
       </div>
+      <div class="group" role="group" aria-label="Content">
+        <span>Content</span>
+        <button data-content="labels" class="active">Labels</button>
+        <button data-content="photos">Photos</button>
+        <button id="peekBtn">Peek</button>
+      </div>
       <div class="group" role="group" aria-label="Palette">
         <span>Palette</span>
-        <button data-palette="studio" class="active">Studio</button>
+        <button data-palette="studio">Studio</button>
         <button data-palette="warm">Warm</button>
         <button data-palette="mono">Mono</button>
-        <button data-palette="manila">Manila</button>
+        <button data-palette="manila" class="active">Manila</button>
       </div>
     </div>
 
-    <folder-gallery id="fg" mode="stack" data-fg-theme="dark" label="Global cities"></folder-gallery>
+    <folder-gallery id="fg" mode="stack" data-fg-theme="light" label="Global cities"></folder-gallery>
 
     <p class="hint">Hover the stack and use <kbd>&larr;</kbd> <kbd>&rarr;</kbd> or your scroll wheel. Click the front folder to select it.</p>
   </main>
@@ -106,18 +112,32 @@
       mono:   { ink: '#e8e8e8', colors: ['#3a3a3a', '#4a4a4a', '#2e2e2e', '#5a5a5a', '#252525'] },
       manila: { ink: '#3a3428', colors: ['#e8c96a', '#dd8f5e', '#8fb5a3', '#e2cf8f', '#b58fb5'] },
     };
-    const TITLES = ['Tokyo', 'Nairobi', 'São Paulo', 'Copenhagen', 'Mexico City'];
+    const CITIES = [
+      { label: 'Tokyo',       slug: 'tokyo' },
+      { label: 'Nairobi',     slug: 'nairobi' },
+      { label: 'São Paulo',   slug: 'sao-paulo' },
+      { label: 'Copenhagen',  slug: 'copenhagen' },
+      { label: 'Mexico City', slug: 'mexico-city' },
+    ];
 
-    let currentPalette = 'studio';
+    let currentPalette = 'manila';
+    let contentMode = 'labels'; // 'labels' | 'photos'
+    let peekOn = false;
 
-    function buildItems(name) {
-      const p = PALETTES[name];
-      return TITLES.map((t, i) => ({
-        label: t,
-        color: p.colors[i % p.colors.length],
-        content: `<div style="font-weight:600;color:${p.ink}">${t}</div>`,
-      }));
+    function buildItems() {
+      const p = PALETTES[currentPalette];
+      return CITIES.map((c, i) => {
+        const base = { label: c.label, color: p.colors[i % p.colors.length] };
+        if (contentMode === 'photos') {
+          // Photo mode: the decal skins the whole folder silhouette, and the
+          // same photo rides inside as content so Peek has something to pull out.
+          return { ...base, decal: `./photos/${c.slug}.jpg`, content: `<img class="fg-image" src="./photos/${c.slug}.jpg" alt="">` };
+        }
+        return { ...base, content: `<div style="font-weight:600;color:${p.ink}">${c.label}</div>` };
+      });
     }
+
+    function rebuild() { fg.items = buildItems(); }
 
     function setTheme(theme) {
       document.documentElement.setAttribute('data-theme', theme);
@@ -130,7 +150,7 @@
 
     function setPalette(name) {
       currentPalette = name;
-      fg.items = buildItems(name);
+      rebuild();
       activate('[aria-label="Palette"]', document.querySelector(`[data-palette="${name}"]`));
     }
 
@@ -139,7 +159,7 @@
       if (el) el.classList.add('active');
     }
 
-    fg.items = buildItems('studio');
+    rebuild();
     fg.addEventListener('fg-select', (e) => console.log('fg-select', e.detail.item.label, e.detail.index));
     fg.addEventListener('fg-modechange', (e) => console.log('fg-modechange', e.detail.mode));
 
@@ -151,6 +171,19 @@
     });
     document.querySelectorAll('[data-mode]').forEach((b) => {
       b.addEventListener('click', () => { fg.setMode(b.dataset.mode); activate('[aria-label="View mode"]', b); });
+    });
+    document.querySelectorAll('[data-content]').forEach((b) => {
+      b.addEventListener('click', () => {
+        contentMode = b.dataset.content;
+        rebuild();
+        document.querySelectorAll('[data-content]').forEach((x) => x.classList.toggle('active', x === b));
+      });
+    });
+    const peekBtn = document.getElementById('peekBtn');
+    peekBtn.addEventListener('click', () => {
+      peekOn = !peekOn;
+      fg.setPeek(peekOn ? 'always' : 'hover');
+      peekBtn.classList.toggle('active', peekOn);
     });
     document.querySelectorAll('[data-palette]').forEach((b) => {
       b.addEventListener('click', () => setPalette(b.dataset.palette));

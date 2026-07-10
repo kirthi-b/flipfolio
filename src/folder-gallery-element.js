@@ -18,7 +18,7 @@ const asBool = (v) => v !== null && v !== 'false';
 
 export class FolderGalleryElement extends HTMLElement {
   static get observedAttributes() {
-    return ['mode', 'loop', 'scroll-nav', 'reduced-motion', 'default-active-index', 'label', 'folder-path'];
+    return ['mode', 'peek', 'loop', 'scroll-nav', 'reduced-motion', 'default-active-index', 'label', 'folder-path'];
   }
 
   constructor() {
@@ -47,12 +47,14 @@ export class FolderGalleryElement extends HTMLElement {
   attributeChangedCallback(name, _oldValue, newValue) {
     if (!this._handle) return;
     if (name === 'mode') { this._handle.setMode(newValue); return; }
+    if (name === 'peek') { this._handle.setPeek(newValue); return; }
     this._render(); // any other observed attribute → rebuild
   }
 
   _options() {
     const opts = { items: this._items };
     if (this.hasAttribute('mode')) opts.mode = this.getAttribute('mode');
+    if (this.hasAttribute('peek')) opts.peek = this.getAttribute('peek');
     if (this.hasAttribute('loop')) opts.loop = asBool(this.getAttribute('loop'));
     if (this.hasAttribute('scroll-nav')) opts.scrollNav = asBool(this.getAttribute('scroll-nav'));
     if (this.hasAttribute('reduced-motion')) opts.reducedMotion = this.getAttribute('reduced-motion');
@@ -77,6 +79,7 @@ export class FolderGalleryElement extends HTMLElement {
   prev() { this._handle && this._handle.prev(); }
   goTo(i) { this._handle && this._handle.goTo(i); }
   setMode(m) { this.setAttribute('mode', m); }
+  setPeek(p) { this.setAttribute('peek', p); }
   getActiveIndex() { return this._handle ? this._handle.getActiveIndex() : -1; }
   getMode() { return this._handle ? this._handle.getMode() : (this.getAttribute('mode') || 'stack'); }
 }

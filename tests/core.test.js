@@ -181,3 +181,55 @@ describe('destroy', () => {
     b.destroy();
   });
 });
+
+describe('peek', () => {
+  it('defaults to hover and reflects as data-fg-peek', () => {
+    createFolderGallery(root, { items: ITEMS });
+    expect(root.getAttribute('data-fg-peek')).toBe('hover');
+  });
+
+  it('respects the option and falls back on invalid values', () => {
+    const h = createFolderGallery(root, { items: ITEMS, peek: 'off' });
+    expect(root.getAttribute('data-fg-peek')).toBe('off');
+    h.setPeek('bogus');
+    expect(root.getAttribute('data-fg-peek')).toBe('off');
+    h.setPeek('always');
+    expect(root.getAttribute('data-fg-peek')).toBe('always');
+  });
+
+  it('destroy removes the peek attribute', () => {
+    const h = createFolderGallery(root, { items: ITEMS });
+    h.destroy();
+    expect(root.getAttribute('data-fg-peek')).toBeNull();
+  });
+});
+
+describe('decal', () => {
+  it('skins the folder with a clipped SVG image and marks the card', () => {
+    createFolderGallery(root, { items: [{ label: 'X', color: '#2a3a3a', decal: '/photos/tokyo.jpg' }] });
+    const card = root.querySelector('.fg-card');
+    expect(card.classList.contains('fg-card--decal')).toBe(true);
+    const image = card.querySelector('.fg-folder image');
+    expect(image.getAttribute('href')).toBe('/photos/tokyo.jpg');
+    expect(image.getAttribute('preserveAspectRatio')).toBe('xMidYMid slice');
+    const clipId = image.getAttribute('clip-path').match(/url\(#(.+)\)/)[1];
+    const clip = card.querySelector('clipPath');
+    expect(clip.id).toBe(clipId);
+    expect(clip.querySelector('path')).toBeTruthy();
+  });
+
+  it('gives every instance and card a unique clip id', () => {
+    const rootB = document.createElement('div');
+    document.body.appendChild(rootB);
+    createFolderGallery(root, { items: [{ decal: '/a.jpg' }, { decal: '/b.jpg' }] });
+    createFolderGallery(rootB, { items: [{ decal: '/c.jpg' }] });
+    const ids = [...document.querySelectorAll('clipPath')].map((c) => c.id);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it('cards without a decal are untouched', () => {
+    createFolderGallery(root, { items: ITEMS });
+    expect(root.querySelector('.fg-card--decal')).toBeFalsy();
+    expect(root.querySelector('.fg-folder image')).toBeFalsy();
+  });
+});

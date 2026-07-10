@@ -68,8 +68,9 @@ Per-folder tab colors, tokens for radius and blur, and the silhouette itself is 
 
 | option | type | default | notes |
 |---|---|---|---|
-| `items` | `Item[]` | `[]` | `{ label?, color?, src?, content?, ...data }` |
+| `items` | `Item[]` | `[]` | `{ label?, color?, src?, content?, decal?, ...data }` |
 | `mode` | `'stack'\|'grid'\|'carousel'` | `'stack'` | 3 modes (a 4th "shelf" is planned) |
+| `peek` | `'hover'\|'always'\|'off'` | `'hover'` | contents slide out of the folder |
 | `contentRenderer` | `(card, item, i) => void` | built-in | fills the folder interior with whatever you render |
 | `onSelect` | `(item, i) => void` | (none) | fired on click/Enter of the active folder (no built-in navigation) |
 | `folderPath` | `string` | manila default | SVG path `d` (viewBox `0 0 480 342`) |
@@ -79,18 +80,18 @@ Per-folder tab colors, tokens for radius and blur, and the silhouette itself is 
 | `defaultActiveIndex` | `number` | `0` | |
 | `label` | `string` | `'Folder gallery'` | `aria-label` for the listbox |
 
-Handle: `next()`, `prev()`, `goTo(i)`, `setMode(m)`, `getActiveIndex()`, `getMode()`, `destroy()`.
+Handle: `next()`, `prev()`, `goTo(i)`, `setMode(m)`, `setPeek(p)`, `getActiveIndex()`, `getMode()`, `destroy()`.
 
 Events (CustomEvent on the root, bubbling): `fg-select`, `fg-activechange`, `fg-modechange`, each with `event.detail`.
 
 ## Content
-Each folder renders what you give it: `item.src` for an image, `item.content` for an HTML string or a DOM node, or a `contentRenderer(card, item, index)` for anything richer.
+Each folder renders what you give it: `item.src` for an image, `item.content` for an HTML string or a DOM node, or a `contentRenderer(card, item, index)` for anything richer. Set `item.decal` to an image URL and the photo skins the whole folder silhouette, tab included. Contents slide out of the folder on hover; the `peek` option makes that always-on or turns it off.
 
 ## Accessibility
 `role="listbox"`/`option`, roving tabindex, arrow-key + Home/End navigation, `aria-live` position announcements, `:focus-visible` rings, and a `prefers-reduced-motion` fallback that drops the 3D tilt.
 
 ## Theming
-Override the CSS custom properties on `.fg-root`: `--fg-folder-bg`, `--fg-radius`, `--fg-perspective`, `--fg-ease`, `--fg-front`, `--fg-front-solid`, `--fg-active-blur`, `--fg-label`, `--fg-dot`, `--fg-dot-active`. Light and dark both work out of the box: `prefers-color-scheme` sets the default, and `data-fg-theme="light"` or `"dark"` on `.fg-root` overrides it.
+Override the CSS custom properties on `.fg-root`: `--fg-folder-bg`, `--fg-radius`, `--fg-perspective`, `--fg-ease`, `--fg-front`, `--fg-front-solid`, `--fg-active-blur`, `--fg-label`, `--fg-dot`, `--fg-dot-active`. Light is the default; dark applies automatically under `prefers-color-scheme: dark`, and `data-fg-theme="light"` or `"dark"` on `.fg-root` overrides either way.
 
 ## Limits
 Client-rendered only: folders paint after JS runs, there is no SSR of the layout itself. Every folder is a live 3D layer, so the sweet spot is 12 items or fewer, not hundreds. Uses `aspect-ratio` and `backdrop-filter`: evergreen browsers only, no IE fallback.

@@ -1,4 +1,4 @@
-import type { FolderItem, GalleryMode, FolderGalleryOptions } from './index';
+import type { FolderItem, GalleryMode, PeekMode, FolderGalleryOptions } from './index';
 
 export declare class FolderGalleryElement extends HTMLElement {
   items: FolderItem[];
@@ -8,6 +8,7 @@ export declare class FolderGalleryElement extends HTMLElement {
   prev(): void;
   goTo(index: number): void;
   setMode(mode: GalleryMode): void;
+  setPeek(peek: PeekMode): void;
   getActiveIndex(): number;
   getMode(): GalleryMode;
 }

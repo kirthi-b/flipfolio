@@ -29,9 +29,13 @@ const DEFAULTS = {
   loop: true,
   scrollNav: true,
   reducedMotion: 'auto',   // 'auto' | 'off' | 'force'
+  peek: 'hover',           // 'hover' | 'always' | 'off'
   defaultActiveIndex: 0,
   label: 'Folder gallery',
 };
+
+const PEEK_MODES = new Set(['hover', 'always', 'off']);
+let instanceCount = 0; // unique SVG clip ids across instances
 
 const MODE_WIDTHS = { stack: 480, grid: 720, carousel: 720 };
 const SCROLL_THRESHOLD = 30;
@@ -106,8 +110,10 @@ export function createFolderGallery(root, options = {}) {
   const emit = (name, detail) => root.dispatchEvent(new CustomEvent(name, { detail, bubbles: true }));
 
   /* ── Build own DOM (no page scaffold assumed) ── */
+  const uid = 'fg' + (++instanceCount);
   root.classList.add('fg-root');
   root.setAttribute('data-fg-mode', mode);
+  root.setAttribute('data-fg-peek', PEEK_MODES.has(opts.peek) ? opts.peek : 'hover');
   const scene = document.createElement('div');
   scene.className = 'fg-scene';
   scene.setAttribute('role', 'listbox');
@@ -128,10 +134,11 @@ export function createFolderGallery(root, options = {}) {
     root.replaceChildren();
     root.classList.remove('fg-root');
     root.removeAttribute('data-fg-mode');
+    root.removeAttribute('data-fg-peek');
   }
 
   if (n === 0) {
-    return { next() {}, prev() {}, goTo() {}, setMode() {}, getActiveIndex: () => -1, getMode: () => mode, destroy: teardown };
+    return { next() {}, prev() {}, goTo() {}, setMode() {}, setPeek() {}, getActiveIndex: () => -1, getMode: () => mode, destroy: teardown };
   }
 
   /* ── Normalized transform - identical function list for every mode ── */
@@ -167,6 +174,27 @@ export function createFolderGallery(root, options = {}) {
     path.setAttribute('d', opts.folderPath);
     path.setAttribute('fill', item.color ? folderColors(item.color).back : 'var(--fg-folder-bg)');
     svg.appendChild(path);
+
+    /* Decal: skin the whole silhouette (tab included) with an image,
+       clipped to the same folder path. The color path stays underneath as
+       the fallback while the image loads. */
+    if (item.decal) {
+      const clipId = `${uid}-clip-${i}`;
+      const clip = document.createElementNS(SVG_NS, 'clipPath');
+      clip.setAttribute('id', clipId);
+      const clipShape = document.createElementNS(SVG_NS, 'path');
+      clipShape.setAttribute('d', opts.folderPath);
+      clip.appendChild(clipShape);
+      svg.appendChild(clip);
+      const img = document.createElementNS(SVG_NS, 'image');
+      img.setAttribute('href', item.decal);
+      img.setAttribute('width', '480');
+      img.setAttribute('height', '342');
+      img.setAttribute('preserveAspectRatio', 'xMidYMid slice');
+      img.setAttribute('clip-path', `url(#${clipId})`);
+      svg.appendChild(img);
+      card.classList.add('fg-card--decal');
+    }
     card.appendChild(svg);
 
     renderContent(card, item, i);
@@ -297,6 +325,10 @@ export function createFolderGallery(root, options = {}) {
     applyLayout();
     emit('fg-modechange', { mode });
   }
+  function setPeek(p) {
+    if (!PEEK_MODES.has(p)) return;
+    root.setAttribute('data-fg-peek', p);
+  }
 
   /* ── Interaction ── */
   cardEls.forEach((card, i) => {
@@ -351,6 +383,7 @@ export function createFolderGallery(root, options = {}) {
     prev: () => goTo(active - 1),
     goTo,
     setMode,
+    setPeek,
     getActiveIndex: () => active,
     getMode: () => mode,
     destroy: teardown,

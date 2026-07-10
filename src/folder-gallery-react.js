@@ -22,6 +22,7 @@ export const FolderGallery = forwardRef(function FolderGallery(props, ref) {
   const {
     items,
     mode = 'stack',
+    peek = 'hover',
     contentRenderer,
     onSelect,
     onActiveChange,
@@ -53,6 +54,7 @@ export const FolderGallery = forwardRef(function FolderGallery(props, ref) {
     const handle = createFolderGallery(root, {
       items,
       mode,
+      peek,
       folderPath,
       loop,
       scrollNav,
@@ -86,7 +88,7 @@ export const FolderGallery = forwardRef(function FolderGallery(props, ref) {
       handle.destroy();
       handleRef.current = null;
     };
-    // mode is handled by the effect below without a rebuild.
+    // mode and peek are handled by the effects below without a rebuild.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [items, folderPath, loop, scrollNav, reducedMotion, defaultActiveIndex, label]);
 
@@ -97,11 +99,17 @@ export const FolderGallery = forwardRef(function FolderGallery(props, ref) {
     }
   }, [mode]);
 
+  // Peek changes reuse the live instance too.
+  useEffect(() => {
+    if (handleRef.current) handleRef.current.setPeek(peek);
+  }, [peek]);
+
   useImperativeHandle(ref, () => ({
     next: () => handleRef.current && handleRef.current.next(),
     prev: () => handleRef.current && handleRef.current.prev(),
     goTo: (i) => handleRef.current && handleRef.current.goTo(i),
     setMode: (m) => handleRef.current && handleRef.current.setMode(m),
+    setPeek: (p) => handleRef.current && handleRef.current.setPeek(p),
     getActiveIndex: () => (handleRef.current ? handleRef.current.getActiveIndex() : -1),
     getMode: () => (handleRef.current ? handleRef.current.getMode() : mode),
   }), [mode]);
