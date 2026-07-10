@@ -53,7 +53,9 @@ function folderTabFill(hex) {
 function defaultContentRenderer(card, item /* , index */) {
   const wrap = document.createElement('div');
   wrap.className = 'fg-content';
-  if (item.content instanceof Node) {
+  // Duck-type DOM nodes (nodeType) rather than `instanceof Node` — `Node`
+  // isn't a global in every embedding (SSR shims, minimal DOM harnesses).
+  if (item.content && typeof item.content === 'object' && typeof item.content.nodeType === 'number') {
     wrap.appendChild(item.content);
   } else if (typeof item.content === 'string') {
     wrap.innerHTML = item.content;

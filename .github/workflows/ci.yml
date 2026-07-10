@@ -15,6 +15,13 @@ jobs:
           node-version: 20
       - run: npm install
       - run: npm run check
+      - run: npm test
       - run: npm run build
       - name: Verify build output
-        run: test -f dist/index.js && test -f dist/index.cjs && test -f dist/index.d.ts && test -f dist/folder-gallery.css
+        run: |
+          for f in dist/index.js dist/index.cjs dist/index.d.ts \
+                   dist/element.js dist/element.cjs dist/element.d.ts \
+                   dist/react.js dist/react.cjs dist/react.d.ts \
+                   dist/folder-gallery.css; do
+            test -f "$f" || { echo "missing $f"; exit 1; }
+          done

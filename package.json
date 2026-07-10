@@ -35,19 +35,37 @@
       "import": "./dist/element.js",
       "require": "./dist/element.cjs"
     },
+    "./react": {
+      "types": "./dist/react.d.ts",
+      "import": "./dist/react.js",
+      "require": "./dist/react.cjs"
+    },
     "./styles.css": "./dist/folder-gallery.css"
   },
   "files": [
     "dist"
   ],
   "scripts": {
-    "check": "node --check src/folder-gallery.js",
+    "check": "node --check src/folder-gallery.js && node --check src/folder-gallery-element.js",
     "build": "tsup",
+    "test": "vitest run",
     "prepublishOnly": "npm run build",
     "serve": "python3 -m http.server 5177"
   },
+  "peerDependencies": {
+    "react": ">=18"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
+  },
   "devDependencies": {
+    "jsdom": "^25.0.1",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
     "tsup": "^8.3.5",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "vitest": "^2.1.8"
   }
 }
