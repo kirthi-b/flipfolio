@@ -136,14 +136,17 @@
 .fg-content:empty { display: none; }
 
 [data-fg-peek='off'] .fg-card.is-active:hover .fg-content { transform: translateY(-8px); }
-/* Peek moves the ACTIVE card's contents only, in every mode; grid also peeks
-   whichever card is hovered. No shadow on the content box itself: the box is
-   transparent around whatever it holds, so a box shadow reads as a floating
-   empty sheet. Contents bring their own shadows. */
-[data-fg-peek='hover'] .fg-card.is-active:hover .fg-content,
+/* Peek moves the ACTIVE card's contents only. In 'hover' mode the pointer
+   anywhere over the scene peeks the active folder (grid peeks the hovered
+   card instead), and the slide-out is delayed a beat while the retract is
+   instant, so navigating reads as retract, cycle, peek. No shadow on the
+   content box itself: the box is transparent around whatever it holds, so a
+   box shadow reads as a floating empty sheet. Contents bring their own. */
+[data-fg-peek='hover']:not([data-fg-mode='grid']) .fg-scene:hover .fg-card.is-active .fg-content,
 [data-fg-peek='hover'][data-fg-mode='grid'] .fg-card:hover .fg-content,
 [data-fg-peek='always'] .fg-card.is-active .fg-content {
   transform: translateY(var(--fg-peek-shift));
+  transition-delay: 180ms;
 }
 
 /* Front panel - the folder's face. Sits over the lower 3/4 like the original
