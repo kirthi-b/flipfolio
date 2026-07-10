@@ -205,31 +205,27 @@ describe('peek', () => {
 });
 
 describe('decal', () => {
-  it('skins the folder with a clipped SVG image and marks the card', () => {
+  it('prints the photo on the folder front and marks the card', () => {
     createFolderGallery(root, { items: [{ label: 'X', color: '#2a3a3a', decal: '/photos/tokyo.jpg' }] });
     const card = root.querySelector('.fg-card');
     expect(card.classList.contains('fg-card--decal')).toBe(true);
-    const image = card.querySelector('.fg-folder image');
-    expect(image.getAttribute('href')).toBe('/photos/tokyo.jpg');
-    expect(image.getAttribute('preserveAspectRatio')).toBe('xMidYMid slice');
-    const clipId = image.getAttribute('clip-path').match(/url\(#(.+)\)/)[1];
-    const clip = card.querySelector('clipPath');
-    expect(clip.id).toBe(clipId);
-    expect(clip.querySelector('path')).toBeTruthy();
+    const photo = card.querySelector('.fg-front img.fg-decal');
+    expect(photo.getAttribute('src')).toBe('/photos/tokyo.jpg');
+    expect(photo.loading).toBe('lazy');
+    // the back stays a colored path, no SVG image
+    expect(card.querySelector('.fg-folder image')).toBeFalsy();
   });
 
-  it('gives every instance and card a unique clip id', () => {
-    const rootB = document.createElement('div');
-    document.body.appendChild(rootB);
-    createFolderGallery(root, { items: [{ decal: '/a.jpg' }, { decal: '/b.jpg' }] });
-    createFolderGallery(rootB, { items: [{ decal: '/c.jpg' }] });
-    const ids = [...document.querySelectorAll('clipPath')].map((c) => c.id);
-    expect(new Set(ids).size).toBe(ids.length);
+  it('keeps the label on top of the photo', () => {
+    createFolderGallery(root, { items: [{ label: 'Tokyo', decal: '/p.jpg' }] });
+    const front = root.querySelector('.fg-front');
+    expect(front.querySelector('.fg-decal')).toBeTruthy();
+    expect(front.querySelector('.fg-label').textContent).toBe('Tokyo');
   });
 
   it('cards without a decal are untouched', () => {
     createFolderGallery(root, { items: ITEMS });
     expect(root.querySelector('.fg-card--decal')).toBeFalsy();
-    expect(root.querySelector('.fg-folder image')).toBeFalsy();
+    expect(root.querySelector('.fg-decal')).toBeFalsy();
   });
 });

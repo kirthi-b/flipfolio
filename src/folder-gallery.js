@@ -35,7 +35,6 @@ const DEFAULTS = {
 };
 
 const PEEK_MODES = new Set(['hover', 'always', 'off']);
-let instanceCount = 0; // unique SVG clip ids across instances
 
 const MODE_WIDTHS = { stack: 480, grid: 720, carousel: 720 };
 const SCROLL_THRESHOLD = 30;
@@ -110,7 +109,6 @@ export function createFolderGallery(root, options = {}) {
   const emit = (name, detail) => root.dispatchEvent(new CustomEvent(name, { detail, bubbles: true }));
 
   /* ── Build own DOM (no page scaffold assumed) ── */
-  const uid = 'fg' + (++instanceCount);
   root.classList.add('fg-root');
   root.setAttribute('data-fg-mode', mode);
   root.setAttribute('data-fg-peek', PEEK_MODES.has(opts.peek) ? opts.peek : 'hover');
@@ -175,32 +173,25 @@ export function createFolderGallery(root, options = {}) {
     path.setAttribute('fill', item.color ? folderColors(item.color).back : 'var(--fg-folder-bg)');
     svg.appendChild(path);
 
-    /* Decal: skin the whole silhouette (tab included) with an image,
-       clipped to the same folder path. The color path stays underneath as
-       the fallback while the image loads. */
-    if (item.decal) {
-      const clipId = `${uid}-clip-${i}`;
-      const clip = document.createElementNS(SVG_NS, 'clipPath');
-      clip.setAttribute('id', clipId);
-      const clipShape = document.createElementNS(SVG_NS, 'path');
-      clipShape.setAttribute('d', opts.folderPath);
-      clip.appendChild(clipShape);
-      svg.appendChild(clip);
-      const img = document.createElementNS(SVG_NS, 'image');
-      img.setAttribute('href', item.decal);
-      img.setAttribute('width', '480');
-      img.setAttribute('height', '342');
-      img.setAttribute('preserveAspectRatio', 'xMidYMid slice');
-      img.setAttribute('clip-path', `url(#${clipId})`);
-      svg.appendChild(img);
-      card.classList.add('fg-card--decal');
-    }
     card.appendChild(svg);
 
     renderContent(card, item, i);
 
     const front = document.createElement('div');
     front.className = 'fg-front';
+    /* Decal: the photo prints on the folder's FRONT PANEL. The back and tab
+       keep their color, so the folder stays a folder: colored tabs in the
+       stack, a real material boundary at the front's lip. */
+    if (item.decal) {
+      card.classList.add('fg-card--decal');
+      const photo = document.createElement('img');
+      photo.className = 'fg-decal';
+      photo.src = item.decal;
+      photo.alt = '';
+      photo.loading = 'lazy';
+      photo.decoding = 'async';
+      front.appendChild(photo);
+    }
     if (item.label) {
       const label = document.createElement('div');
       label.className = 'fg-label';

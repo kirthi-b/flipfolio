@@ -187,17 +187,15 @@
    The image is clipped to the silhouette inside the SVG; the front panel
    becomes a label scrim so the photo shows through and the label stays
    readable. Overrides both the solid and frosted front treatments. */
+/* ── decal: the photo prints on the folder's front panel ──
+   The back and tab keep their color, so the stack still reads as folders.
+   The print carries its own lighting: a lip hairline where the front edge
+   catches the light, a soft lamination sheen from the top left, and a label
+   scrim along the bottom. */
 .fg-card--decal .fg-front,
 .fg-card--decal:not(.is-active) .fg-front,
 .fg-card--decal.is-active .fg-front {
-  /* Shading over the photo, dark and light: a soft diagonal sheen from the
-     top left as if the print were laminated, an inner shadow at the folder
-     mouth so the opening reads as depth, and a label scrim along the bottom.
-     The inset hairline below is the front's lip catching the light. */
-  background:
-    linear-gradient(115deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.04) 34%, rgba(255, 255, 255, 0) 52%),
-    linear-gradient(to bottom, rgba(12, 12, 14, 0.32), rgba(12, 12, 14, 0) 14%),
-    linear-gradient(to top, rgba(12, 12, 14, 0.68), rgba(12, 12, 14, 0) 52%);
+  background: var(--fg-front-solid);
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.30);
@@ -205,10 +203,25 @@
 .fg-card--decal.is-active .fg-front {
   box-shadow: var(--fg-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.30);
 }
-.fg-card--decal .fg-label { color: #ffffff; }
-/* A photo-skinned folder has no frosted glass to soften a glimpse, so its
-   contents stay fully tucked away until peeked. */
-.fg-card--decal .fg-content { opacity: 0; }
+.fg-decal {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
+}
+.fg-card--decal .fg-front::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background:
+    linear-gradient(115deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.04) 34%, rgba(255, 255, 255, 0) 52%),
+    linear-gradient(to top, rgba(12, 12, 14, 0.62), rgba(12, 12, 14, 0) 42%);
+}
+.fg-card--decal .fg-label { color: #ffffff; position: relative; z-index: 1; }
 
 .fg-label {
   color: var(--fg-label);

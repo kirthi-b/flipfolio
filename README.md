@@ -85,7 +85,7 @@ Handle: `next()`, `prev()`, `goTo(i)`, `setMode(m)`, `setPeek(p)`, `getActiveInd
 Events (CustomEvent on the root, bubbling): `fg-select`, `fg-activechange`, `fg-modechange`, each with `event.detail`.
 
 ## Content
-Each folder renders what you give it: `item.src` for an image, `item.content` for an HTML string or a DOM node, or a `contentRenderer(card, item, index)` for anything richer. Set `item.decal` to an image URL and the photo skins the whole folder silhouette, tab included. Contents slide out of the folder on hover; the `peek` option makes that always-on or turns it off.
+Each folder renders what you give it: `item.src` for an image, `item.content` for an HTML string or a DOM node, or a `contentRenderer(card, item, index)` for anything richer. Set `item.decal` to an image URL and the photo prints on the folder's front panel; the back and tab keep their color. Contents slide out of the folder on hover; the `peek` option makes that always-on or turns it off.
 
 ## Accessibility
 `role="listbox"`/`option`, roving tabindex, arrow-key + Home/End navigation, `aria-live` position announcements, `:focus-visible` rings, and a `prefers-reduced-motion` fallback that drops the 3D tilt.

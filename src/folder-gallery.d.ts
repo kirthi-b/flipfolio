@@ -7,7 +7,7 @@ export interface FolderItem {
   src?: string;
   /** Arbitrary interior content: an HTML string or a DOM node. */
   content?: string | Node;
-  /** Image URL skinned across the whole folder silhouette, tab included. */
+  /** Image URL printed on the folder's front panel; back and tab keep their color. */
   decal?: string;
   /** Any extra data - passed through to onSelect. */
   [key: string]: unknown;
