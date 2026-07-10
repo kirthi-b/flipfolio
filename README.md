@@ -6,6 +6,8 @@ A framework-agnostic 3D folder gallery for the web. Items render as physical man
 
 > _**[Kirthi writes the real pitch here — her voice.]** The positioning to land (per the plan): "a manila-folder gallery for **real content**, not a decorative folder icon." Everything below the fold is factual scaffolding; the hero + "why I built it" are hers to write before launch._
 
+![folder-gallery demo — stack, grid, and carousel modes](assets/demo.gif)
+
 ## Status
 This is the extracted **core** — ported from the hand-built portfolio engine, adapted to own its own DOM and tear down cleanly. Still to come before publish: named build (tsup ESM+CJS+types), Web-Component wrapper, docs site + live playground, polished default CSS, tests, and the npm/shadcn-registry release. See `~/Documents/notes/folder-widget-plan.md`.
 

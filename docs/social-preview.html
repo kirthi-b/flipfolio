@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>folder-gallery — social preview (1280×640)</title>
+  <link rel="stylesheet" href="../src/folder-gallery.css">
+  <style>
+    * { box-sizing: border-box; margin: 0; }
+    html, body { width: 1280px; height: 640px; overflow: hidden; }
+    body {
+      background: #f3f1ec;
+      color: #1c1c1a;
+      font: 16px/1.5 ui-sans-serif, system-ui, "Helvetica Neue", sans-serif;
+      display: flex;
+      align-items: center;
+    }
+    .text {
+      flex: 0 0 520px;
+      padding: 0 0 0 84px;
+    }
+    h1 {
+      font-size: 64px;
+      font-weight: 750;
+      letter-spacing: -0.03em;
+      line-height: 1.02;
+      margin-bottom: 20px;
+    }
+    .tag {
+      font-size: 22px;
+      line-height: 1.45;
+      color: #4a463e;
+      max-width: 30ch;
+      margin-bottom: 28px;
+    }
+    .chips { display: flex; gap: 10px; }
+    .chip {
+      font-size: 15px;
+      font-weight: 600;
+      padding: 7px 14px;
+      border: 1.5px solid #1c1c1a;
+      border-radius: 999px;
+      background: transparent;
+    }
+    .chip--accent { background: #1f6f6f; border-color: #1f6f6f; color: #f3f1ec; }
+    .stage {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      /* nudge the stack down so the folder sits like it's on a desk */
+      padding-top: 90px;
+    }
+    .stage .fg-root { --fg-transition-transform: 1ms; --fg-transition-fade: 1ms; }
+    .stage .fg-scene { width: 560px; height: 520px; }
+    .stage .fg-dots { display: none; }
+  </style>
+</head>
+<body>
+  <div class="text">
+    <h1>folder-<br>gallery</h1>
+    <p class="tag">A 3D folder gallery for real content — stack, grid, and carousel.</p>
+    <div class="chips">
+      <span class="chip chip--accent">3 modes</span>
+      <span class="chip">zero deps</span>
+      <span class="chip">accessible</span>
+    </div>
+  </div>
+  <div class="stage">
+    <div id="fg" data-fg-theme="light"></div>
+  </div>
+  <script type="module">
+    import { createFolderGallery } from '../src/folder-gallery.js';
+    const manila = ['#e8c96a', '#dd8f5e', '#8fb5a3', '#e2cf8f', '#b58fb5'];
+    const titles = ['Field notes', 'Site photos', 'Census pulls', 'Sketches', 'Interviews'];
+    createFolderGallery(document.getElementById('fg'), {
+      items: titles.map((t, i) => ({
+        label: t,
+        color: manila[i],
+        content: `<div style="font-weight:650;color:#3a3428;font-size:22px">${t}</div>`,
+      })),
+      mode: 'stack',
+      reducedMotion: 'force',
+    });
+  </script>
+</body>
+</html>
