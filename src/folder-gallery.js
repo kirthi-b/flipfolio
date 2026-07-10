@@ -47,15 +47,22 @@ function hexToRgb(hex) {
 /* Derive the folder's three surfaces from one base color (same offsets as the
  * original engine): back/tab −30, frosted front +40 at 0.55, solid front +35.
  * The solid variant is what keeps NON-active cards fully opaque - only the
- * active card gets the translucent frosted treatment. */
+ * active card gets the translucent frosted treatment. Also picks a label
+ * color (white or ink) by the frontSolid surface's YIQ brightness, so a
+ * dark folder color doesn't leave the label unreadable regardless of theme. */
 function folderColors(hex) {
   const [r, g, b] = hexToRgb(hex);
   const dn = (v) => Math.max(v - 30, 0);
   const up = (v, o) => Math.min(v + o, 255);
+  const fr = up(r, 35);
+  const fg = up(g, 35);
+  const fb = up(b, 35);
+  const yiq = (fr * 299 + fg * 587 + fb * 114) / 1000;
   return {
     back: `rgb(${dn(r)},${dn(g)},${dn(b)})`,
     front: `rgba(${up(r, 40)},${up(g, 40)},${up(b, 40)},0.55)`,
-    frontSolid: `rgb(${up(r, 35)},${up(g, 35)},${up(b, 35)})`,
+    frontSolid: `rgb(${fr},${fg},${fb})`,
+    label: yiq >= 128 ? '#1c1c1a' : '#ffffff',
   };
 }
 
@@ -161,6 +168,7 @@ export function createFolderGallery(root, options = {}) {
       card.style.setProperty('--fg-folder-bg', item.color);
       card.style.setProperty('--fg-front', c.front);
       card.style.setProperty('--fg-front-solid', c.frontSolid);
+      card.style.setProperty('--fg-label-on-color', c.label);
     }
 
     const svg = document.createElementNS(SVG_NS, 'svg');

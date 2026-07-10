@@ -224,7 +224,10 @@
 .fg-card--decal .fg-label { color: #ffffff; position: relative; z-index: 1; }
 
 .fg-label {
-  color: var(--fg-label);
+  /* Falls back to the theme label color when the card has no item.color;
+     otherwise the engine sets --fg-label-on-color per card so the label
+     stays readable against that folder's own front-panel brightness. */
+  color: var(--fg-label-on-color, var(--fg-label));
   font-weight: 600;
   font-size: 0.95rem;
   letter-spacing: 0.01em;
