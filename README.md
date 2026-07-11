@@ -39,6 +39,18 @@ import 'flipfolio/styles.css';
 <FolderGallery items={items} mode="grid" onSelect={(item, i) => open(item)} />
 ```
 
+Vue:
+```vue
+<script setup>
+import { FolderGallery } from 'flipfolio/vue';
+import 'flipfolio/styles.css';
+</script>
+
+<template>
+  <FolderGallery :items="items" mode="grid" @select="(item, i) => open(item)" />
+</template>
+```
+
 Web component:
 ```html
 <script type="module">

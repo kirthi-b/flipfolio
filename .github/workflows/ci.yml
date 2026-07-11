@@ -22,6 +22,7 @@ jobs:
           for f in dist/index.js dist/index.cjs dist/index.d.ts \
                    dist/element.js dist/element.cjs dist/element.d.ts \
                    dist/react.js dist/react.cjs dist/react.d.ts \
+                   dist/vue.js dist/vue.cjs dist/vue.d.ts \
                    dist/folder-gallery.css; do
             test -f "$f" || { echo "missing $f"; exit 1; }
           done

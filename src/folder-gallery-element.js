@@ -16,7 +16,13 @@ import { createFolderGallery } from './folder-gallery.js';
 
 const asBool = (v) => v !== null && v !== 'false';
 
-export class FolderGalleryElement extends HTMLElement {
+// SSR-safe base: on a server (Next/Nuxt) there is no HTMLElement, and merely
+// evaluating `class extends HTMLElement` at import time would throw. Fall back
+// to a stub there; the real element is only ever registered in the browser via
+// defineFolderGallery (guarded on customElements below).
+const ElementBase = typeof HTMLElement !== 'undefined' ? HTMLElement : class {};
+
+export class FolderGalleryElement extends ElementBase {
   static get observedAttributes() {
     return ['mode', 'peek', 'loop', 'scroll-nav', 'reduced-motion', 'default-active-index', 'label', 'folder-path'];
   }
