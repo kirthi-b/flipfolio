@@ -6,11 +6,14 @@ Started as a CSS 3D experiment; it now runs the [kirthi.studio](https://kirthi.s
 
 Live demo: [kirthi.studio/demos/flipfolio](https://kirthi.studio/demos/flipfolio/)
 
-> v0.1.0, work in progress. Private while it gets built out; not published to npm yet.
+> v0.1.0, an early release.
 
 ![flipfolio demo: stack, grid, and carousel modes](assets/demo.gif)
 
 ## Quick start
+```sh
+npm install flipfolio
+```
 ```html
 <link rel="stylesheet" href="flipfolio/styles.css">
 <div id="gallery"></div>
