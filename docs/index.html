@@ -121,17 +121,32 @@
     .opts button.active { background: var(--chip-active-bg); color: var(--chip-active-fg); border-color: var(--chip-active-bg); }
     .group.is-disabled { opacity: .4; pointer-events: none; }
 
-    /* ── canvas: the sandbox stage ── */
+    /* ── canvas: the sandbox stage ──
+       .canvas is the fixed frame (dotted bg + the pinned readout); .viewport
+       fills it and does the centering. In grid mode .viewport becomes a
+       vertical scroller so tall grids keep full-size folders instead of
+       being scaled down to fit the height. */
     .canvas {
       flex: 1;
       position: relative;
       min-width: 0;
+      overflow: hidden;
+      background-image: radial-gradient(var(--canvas-dot) 1px, transparent 1px);
+      background-size: 22px 22px;
+    }
+    .viewport {
+      position: absolute;
+      inset: 0;
       display: flex;
       align-items: center;
       justify-content: center;
       overflow: hidden;
-      background-image: radial-gradient(var(--canvas-dot) 1px, transparent 1px);
-      background-size: 22px 22px;
+    }
+    .viewport.is-scroll {
+      overflow-y: auto;
+      align-items: safe center;
+      /* extra bottom room so the last row clears the pinned readout */
+      padding: 24px 0 60px;
     }
     .stage { transform-origin: center center; }
     folder-gallery { display: block; }
@@ -253,8 +268,10 @@
       aria-label="Resize control rail" tabindex="0"></div>
 
     <section class="canvas" id="canvas">
-      <div class="stage" id="stage">
-        <folder-gallery id="fg" mode="stack" data-fg-theme="light" label="Global cities"></folder-gallery>
+      <div class="viewport" id="viewport">
+        <div class="stage" id="stage">
+          <folder-gallery id="fg" mode="stack" data-fg-theme="light" label="Global cities"></folder-gallery>
+        </div>
       </div>
       <div class="readout" id="readout" title="Click to copy"></div>
     </section>
@@ -267,6 +284,7 @@
     const fg = document.getElementById('fg');
     const stage = document.getElementById('stage');
     const canvas = document.getElementById('canvas');
+    const viewport = document.getElementById('viewport');
     const readout = document.getElementById('readout');
     const panel = document.querySelector('.panel');
     const panelResize = document.getElementById('panelResize');
@@ -334,15 +352,30 @@
 
     function rebuild() { fg.items = buildItems(); requestAnimationFrame(fit); }
 
-    /* ── sandbox fit: scale the stage so nothing ever scrolls ── */
+    /* ── sandbox fit: scale the stage to the viewport ──
+       Stack and carousel scale to fit BOTH axes so nothing scrolls. Grid can
+       run several rows tall; shrinking it to fit the height would leave the
+       folders tiny, so grid scales to WIDTH only and the viewport scrolls
+       vertically instead. */
     function fit() {
+      const grid = currentMode === 'grid';
       const pad = 36;
       const peekHeadroom = peekOn ? 110 : 20;
       const needW = fg.offsetWidth + pad;
       const needH = fg.offsetHeight + pad + peekHeadroom;
-      const c = canvas.getBoundingClientRect();
-      const scale = Math.min(1, c.width / needW, (c.height - 44) / needH);
+      const c = viewport.getBoundingClientRect();
+      const scale = grid
+        ? Math.min(1, c.width / needW)
+        : Math.min(1, c.width / needW, (c.height - 44) / needH);
+      viewport.classList.toggle('is-scroll', grid);
+      // Top-origin in scroll mode so the first row sits at the top; transforms
+      // don't shrink the layout box, so reclaim the leftover height (when
+      // scaled down) or the scroll area would run past the last row.
+      stage.style.transformOrigin = grid ? 'top center' : 'center center';
       stage.style.transform = `scale(${scale.toFixed(3)})`;
+      stage.style.marginBottom = grid && scale < 1
+        ? `${-fg.offsetHeight * (1 - scale)}px`
+        : '';
     }
     new ResizeObserver(() => fit()).observe(canvas);
     fg.addEventListener('fg-modechange', () => setTimeout(fit, 60));
