@@ -46,10 +46,18 @@ const browser = await chromium.launch();
   await page.click('button[data-content="photos"]');               // photo decals
   await page.waitForLoadState('networkidle');
   await page.waitForTimeout(1200);
-  await page.click('#peekBtn');                                    // peek: contents slide out
-  await page.waitForTimeout(1000);
-  await page.evaluate(() => document.getElementById('fg').next());
-  await page.waitForTimeout(950);
+  await page.click('#peekBtn');                                    // peek toggled on ('hover' on desktop)
+  // Peek is hover-gated: nothing slides out until the pointer is over the
+  // scene. Hover it so the contents actually pull out on camera, then
+  // navigate while hovering to show the retract / cycle / re-peek cadence.
+  const scene = await page.$('.fg-scene');
+  const sb = await scene.boundingBox();
+  await page.mouse.move(sb.x + sb.width / 2, sb.y + sb.height / 2, { steps: 12 });
+  await page.waitForTimeout(1400);                                 // slide-out (180ms delay + transition) + hold
+  await page.evaluate(() => document.getElementById('fg').next()); // retract -> cycle -> re-peek
+  await page.waitForTimeout(1500);
+  await page.mouse.move(sb.x + sb.width / 2, sb.y - 60, { steps: 8 }); // leave: contents tuck back in
+  await page.waitForTimeout(700);
   await page.click('button[data-theme-pick="dark"]');              // dark studio to close
   await page.waitForTimeout(1100);
   await page.close();
