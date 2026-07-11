@@ -337,17 +337,43 @@ export function createFolderGallery(root, options = {}) {
       if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); select(i); }
     });
   });
-  on(scene, 'keydown', (e) => {
-    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { e.preventDefault(); goTo(active + 1); }
-    else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); goTo(active - 1); }
-    else if (e.key === 'Home') { e.preventDefault(); goTo(0); }
-    else if (e.key === 'End') { e.preventDefault(); goTo(n - 1); }
-    else return;
-    cardEls[active].focus();
+  /* Arrow keys work two ways, matching the reference implementation:
+     1. Focus already inside the gallery (Tab to a card/dot) - bubbles here
+        and re-focuses the new active card, standard roving-tabindex UX.
+     2. Mouse hovering the gallery, focus anywhere else on the page - a
+        document-level listener picks it up. Without this route, arrow
+        keys only work AFTER a click puts focus on a card - and a click is
+        also what fires onSelect, which in real use is often a link. Making
+        keyboard nav depend on that first click means the only way to
+        "activate" arrows is to risk navigating away. Hover is enough. */
+  function handleArrowKeys(e) {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { e.preventDefault(); goTo(active + 1); return true; }
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); goTo(active - 1); return true; }
+    if (e.key === 'Home') { e.preventDefault(); goTo(0); return true; }
+    if (e.key === 'End') { e.preventDefault(); goTo(n - 1); return true; }
+    return false;
+  }
+  on(scene, 'keydown', (e) => { if (handleArrowKeys(e)) cardEls[active].focus(); });
+  on(dotsEl, 'keydown', (e) => { if (handleArrowKeys(e)) cardEls[active].focus(); });
+
+  let hovered = false;
+  on(root, 'mouseenter', () => { hovered = true; });
+  on(root, 'mouseleave', () => { hovered = false; });
+  on(document, 'keydown', (e) => {
+    if (!hovered) return;
+    // Don't hijack arrows if focus is on an interactive control outside
+    // the gallery (nav link, a form field elsewhere on the page).
+    const ae = document.activeElement;
+    if (ae && ae !== document.body && !root.contains(ae)) return;
+    handleArrowKeys(e); // no forced focus - the user hasn't tabbed in
   });
 
   if (opts.scrollNav) {
-    on(scene, 'wheel', (e) => {
+    /* Bound to root, not just the scene box: root is the widget's full
+       footprint (scene + dots), so wheel events over the dots row or any
+       gap the consumer's own layout leaves around the gallery still cycle
+       it, instead of requiring the pointer over the exact folder art. */
+    on(root, 'wheel', (e) => {
       if (mode === 'grid') return;
       const atStart = !opts.loop && active === 0 && e.deltaY < 0;
       const atEnd = !opts.loop && active === n - 1 && e.deltaY > 0;
