@@ -73,15 +73,35 @@
     /* ── layout: control rail + canvas ── */
     main { flex: 1; display: flex; min-height: 0; }
     .panel {
-      flex: 0 0 218px;
+      flex: 0 0 auto;
+      width: 218px;
+      min-width: 160px;
+      max-width: 420px;
       padding: 1rem .9rem;
       display: flex;
       flex-direction: column;
       gap: 1rem;
-      border-right: 1px solid var(--chip-border);
       background: var(--panel-bg);
       overflow-y: auto;
     }
+    /* Drag handle sits between the rail and the canvas. The rail's own
+       width drives the canvas's available space (flex:1 on .canvas), so
+       dragging this just resizes .panel - the existing ResizeObserver on
+       .canvas (see fit()) picks up the resulting canvas resize on its own,
+       no extra wiring needed to keep the gallery scaled correctly. */
+    .panel-resize {
+      flex: 0 0 5px;
+      cursor: col-resize;
+      background: var(--chip-border);
+      position: relative;
+      touch-action: none;
+    }
+    .panel-resize::after {
+      content: '';
+      position: absolute;
+      inset: 0 -4px;
+    }
+    .panel-resize:hover, .panel-resize.is-dragging { background: var(--page-faint); }
     .group { display: flex; flex-direction: column; gap: .4rem; }
     .group > span {
       color: var(--page-faint);
@@ -169,14 +189,16 @@
       main { flex-direction: column; }
       .panel {
         flex: 0 0 auto;
+        width: auto;
         flex-direction: row;
         flex-wrap: wrap;
         gap: .55rem .9rem;
-        border-right: 0;
         border-bottom: 1px solid var(--chip-border);
         padding: .55rem .7rem;
         overflow: visible;
       }
+      /* Rail stacks above the canvas here - nothing left to drag sideways. */
+      .panel-resize { display: none; }
       .group { flex-direction: row; align-items: center; gap: .4rem; }
       .group > span { font-size: .62rem; }
       .readout { display: none; }
@@ -227,6 +249,9 @@
       </div>
     </aside>
 
+    <div class="panel-resize" id="panelResize" role="separator" aria-orientation="vertical"
+      aria-label="Resize control rail" tabindex="0"></div>
+
     <section class="canvas" id="canvas">
       <div class="stage" id="stage">
         <folder-gallery id="fg" mode="stack" data-fg-theme="light" label="Global cities"></folder-gallery>
@@ -243,6 +268,8 @@
     const stage = document.getElementById('stage');
     const canvas = document.getElementById('canvas');
     const readout = document.getElementById('readout');
+    const panel = document.querySelector('.panel');
+    const panelResize = document.getElementById('panelResize');
 
     const PALETTES = {
       studio: { colors: ['#2a3a3a', '#3d2e42', '#2a2d3e', '#3a3d2f', '#4a3030'] },
@@ -319,6 +346,44 @@
     }
     new ResizeObserver(() => fit()).observe(canvas);
     fg.addEventListener('fg-modechange', () => setTimeout(fit, 60));
+
+    /* ── control rail: draggable + resizable ──
+       Dragging only ever changes .panel's width. The canvas is flex:1, so
+       it (and the gallery inside it) shrinks or grows to fill whatever
+       .panel gives up - the ResizeObserver above already watches .canvas
+       and re-fits on every change, dragged or not. */
+    const PANEL_MIN = 160;
+    const PANEL_MAX = 420;
+    function setPanelWidth(px) {
+      panel.style.width = `${Math.min(PANEL_MAX, Math.max(PANEL_MIN, px))}px`;
+    }
+    let dragStartX = 0;
+    let dragStartW = 0;
+    function onDragMove(e) {
+      const x = e.touches ? e.touches[0].clientX : e.clientX;
+      setPanelWidth(dragStartW + (x - dragStartX));
+    }
+    function onDragEnd() {
+      panelResize.classList.remove('is-dragging');
+      document.removeEventListener('pointermove', onDragMove);
+      document.removeEventListener('pointerup', onDragEnd);
+    }
+    panelResize.addEventListener('pointerdown', (e) => {
+      if (matchMedia('(max-width: 860px)').matches) return; // rail is stacked, nothing to drag
+      dragStartX = e.clientX;
+      dragStartW = panel.getBoundingClientRect().width;
+      panelResize.classList.add('is-dragging');
+      document.addEventListener('pointermove', onDragMove);
+      document.addEventListener('pointerup', onDragEnd);
+      e.preventDefault();
+    });
+    // Keyboard: focus the handle (it's a role="separator"), arrows resize.
+    panelResize.addEventListener('keydown', (e) => {
+      if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+      e.preventDefault();
+      const step = e.key === 'ArrowRight' ? 16 : -16;
+      setPanelWidth(panel.getBoundingClientRect().width + step);
+    });
 
     /* ── live API readout ── */
     function updateReadout() {
