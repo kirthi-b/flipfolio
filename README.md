@@ -1,10 +1,15 @@
 # flipfolio
 
+[![npm](https://img.shields.io/npm/v/flipfolio)](https://www.npmjs.com/package/flipfolio)
+[![minzipped size](https://img.shields.io/bundlephobia/minzip/flipfolio)](https://bundlephobia.com/package/flipfolio)
+[![CI](https://github.com/kirthi-b/flipfolio/actions/workflows/ci.yml/badge.svg)](https://github.com/kirthi-b/flipfolio/actions/workflows/ci.yml)
+[![license](https://img.shields.io/npm/l/flipfolio)](LICENSE)
+
 A gallery where every item is a folder: stack them, grid them, spin them.
 
 Started as a CSS 3D experiment; it now runs the [kirthi.studio](https://kirthi.studio) homepage. No framework, no dependencies.
 
-Live demo: [kirthi.studio/demos/flipfolio](https://kirthi.studio/demos/flipfolio/)
+Live demo: [kirthi.studio/demos/flipfolio](https://kirthi.studio/demos/flipfolio/) · Edit it on [StackBlitz](https://stackblitz.com/github/kirthi-b/flipfolio/tree/master/examples/vanilla?file=main.js)
 
 > v0.1.0, an early release.
 
