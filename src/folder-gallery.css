@@ -116,12 +116,19 @@
 .fg-card--snap { transition: none; }
 /* While flying off, the fade must FINISH before the relayout snaps the
    card to its staging point: snapping a still-visible card mid-flight
-   reads as a flicker. Opacity outruns the 260ms timer; the transform
-   keeps the full flight ease. */
+   reads as a flicker. Opacity completes inside the 400ms timer; the
+   transform launches hard and glides (a throw keeps its momentum). */
 .fg-card--flung {
   transition:
-    transform var(--fg-transition-transform) var(--fg-ease),
-    opacity 200ms var(--fg-ease);
+    transform 560ms cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 340ms ease-out;
+}
+/* Dropping back into the pile: a quicker, softer settle than the default
+   700ms shuffle, so the landing reads as its own beat. */
+.fg-card--entering {
+  transition:
+    transform 620ms cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 320ms ease-out;
 }
 .fg-card:focus-visible {
   outline: 2px solid var(--fg-dot-active);

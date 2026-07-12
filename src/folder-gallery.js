@@ -152,10 +152,16 @@ export function createFolderGallery(root, options = {}) {
 
   /* ── Normalized transform - identical function list for every mode ── */
   function setCardTransform(card, { x, y, z, rx, ry, s, zIndex, opacity, isActive }) {
-    card.style.transform = `translate3d(${x}px,${y}px,${z}px) rotateX(${rx}deg) rotateY(${ry}deg) scale(${s})`;
+    /* A card mid-throw owns its own motion: layout updates its role
+       (selection, stacking) but leaves transform and opacity to the fling,
+       so the pile can shuffle immediately while the thrown folder finishes
+       its flight. The fling handler relayouts it once it has faded out. */
+    if (!card.classList.contains('fg-card--flung')) {
+      card.style.transform = `translate3d(${x}px,${y}px,${z}px) rotateX(${rx}deg) rotateY(${ry}deg) scale(${s})`;
+      card.style.opacity = String(opacity);
+    }
     card.style.transformOrigin = 'center bottom';
     card.style.zIndex = String(zIndex);
-    card.style.opacity = String(opacity);
     card.setAttribute('aria-selected', isActive ? 'true' : 'false');
     card.classList.toggle('is-active', isActive);
   }
@@ -489,21 +495,20 @@ export function createFolderGallery(root, options = {}) {
       if (reduced) { goTo(target); return; }
       const offX = horizontal ? Math.sign(dragDX) * Math.max(window.innerWidth * 0.7, 480) : dragDX * 3;
       const offY = horizontal ? dragDY * 3 : Math.sign(dragDY) * Math.max(window.innerHeight * 0.7, 480);
-      card.classList.add('fg-card--flung'); // fast fade: fully invisible before the snap below
+      /* Choreography: the pile answers the throw IMMEDIATELY (goTo below;
+         layout skips the flung card), while the thrown folder finishes its
+         own flight - a longer, momentum-eased sail that fades over 340ms.
+         Once it is fully invisible, it re-enters by DROPPING IN from above
+         its new slot: never straight from off-screen, which would cross
+         the other folders' 3D planes and slice them visibly. */
+      card.classList.add('fg-card--flung');
       card.style.transform = `${dragBase} translate3d(${offX}px, ${offY}px, 40px) rotate(${Math.sign(dragDX || 1) * 18}deg)`;
       card.style.opacity = '0';
+      goTo(target); // shuffle starts now; the flung card is exempt from this relayout
       setTimeout(() => {
-        /* The thrown folder must NOT transition from off-screen straight to
-           its new slot: that path crosses the other folders' 3D planes and
-           slices them visibly. Instead it re-enters by DROPPING IN from
-           above the pile: snap (transition off) to a staging point 90px
-           over the destination slot at the slot's own depth, then let the
-           transition carry it down. Descending at its final z, it slides
-           in behind the cards in front of it, which is exactly what filing
-           a folder back into a pile looks like. */
         card.classList.add('fg-card--snap');
-        card.classList.remove('fg-card--flung'); // while transitions are off
-        goTo(target);
+        card.classList.remove('fg-card--flung');
+        applyLayout(); // now it takes its slot transform (invisible, transitions off)
         const slot = card.style.transform;
         const slotOpacity = card.style.opacity;
         card.style.transform = `${slot} translate3d(0, -90px, 0)`;
@@ -515,11 +520,13 @@ export function createFolderGallery(root, options = {}) {
            Painting one real frame at the staging point (invisible,
            transitions off) gives every engine the same before-state. */
         requestAnimationFrame(() => requestAnimationFrame(() => {
-          card.classList.remove('fg-card--snap'); // transitions back on
-          card.style.transform = slot;            // descend into the pile
+          card.classList.remove('fg-card--snap');
+          card.classList.add('fg-card--entering'); // quicker settle curve for the drop
+          card.style.transform = slot;             // descend into the pile
           card.style.opacity = slotOpacity;
+          setTimeout(() => card.classList.remove('fg-card--entering'), 700);
         }));
-      }, 260); // after the 200ms flung fade, with margin: never snap a visible card
+      }, 400); // after the 340ms flung fade, with margin: never snap a visible card
     };
     on(window, 'pointerup', endDrag);
     on(window, 'pointercancel', endDrag);
