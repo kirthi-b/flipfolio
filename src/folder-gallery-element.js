@@ -43,7 +43,14 @@ export class FolderGalleryElement extends ElementBase {
   connectedCallback() {
     // Optional declarative items via a JSON `items` attribute.
     if (!this._items.length && this.getAttribute('items')) {
-      try { this._items = JSON.parse(this.getAttribute('items')); } catch (_) { /* ignore malformed */ }
+      try {
+        this._items = JSON.parse(this.getAttribute('items'));
+      } catch (err) {
+        console.warn(
+          '<folder-gallery> malformed items attribute:',
+          err.message,
+        );
+      }
     }
     this._render();
   }
