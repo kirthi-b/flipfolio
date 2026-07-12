@@ -489,6 +489,7 @@ export function createFolderGallery(root, options = {}) {
       if (reduced) { goTo(target); return; }
       const offX = horizontal ? Math.sign(dragDX) * Math.max(window.innerWidth * 0.7, 480) : dragDX * 3;
       const offY = horizontal ? dragDY * 3 : Math.sign(dragDY) * Math.max(window.innerHeight * 0.7, 480);
+      card.classList.add('fg-card--flung'); // fast fade: fully invisible before the snap below
       card.style.transform = `${dragBase} translate3d(${offX}px, ${offY}px, 40px) rotate(${Math.sign(dragDX || 1) * 18}deg)`;
       card.style.opacity = '0';
       setTimeout(() => {
@@ -501,6 +502,7 @@ export function createFolderGallery(root, options = {}) {
            in behind the cards in front of it, which is exactly what filing
            a folder back into a pile looks like. */
         card.classList.add('fg-card--snap');
+        card.classList.remove('fg-card--flung'); // while transitions are off
         goTo(target);
         const slot = card.style.transform;
         const slotOpacity = card.style.opacity;
@@ -517,7 +519,7 @@ export function createFolderGallery(root, options = {}) {
           card.style.transform = slot;            // descend into the pile
           card.style.opacity = slotOpacity;
         }));
-      }, 240);
+      }, 260); // after the 200ms flung fade, with margin: never snap a visible card
     };
     on(window, 'pointerup', endDrag);
     on(window, 'pointercancel', endDrag);

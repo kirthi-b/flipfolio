@@ -114,6 +114,15 @@
    (see the fling handler): transitioning that move would slide the card
    through the other folders' planes. */
 .fg-card--snap { transition: none; }
+/* While flying off, the fade must FINISH before the relayout snaps the
+   card to its staging point: snapping a still-visible card mid-flight
+   reads as a flicker. Opacity outruns the 260ms timer; the transform
+   keeps the full flight ease. */
+.fg-card--flung {
+  transition:
+    transform var(--fg-transition-transform) var(--fg-ease),
+    opacity 200ms var(--fg-ease);
+}
 .fg-card:focus-visible {
   outline: 2px solid var(--fg-dot-active);
   outline-offset: 4px;
