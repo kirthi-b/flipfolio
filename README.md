@@ -13,7 +13,7 @@ Live demo: [kirthi.studio/demos/flipfolio](https://kirthi.studio/demos/flipfolio
 
 > v0.1.0, an early release.
 
-![flipfolio demo: stack, grid, and carousel modes](assets/demo.gif)
+![flipfolio demo: throwing folders off the stack, grid mode, and photo decals](assets/demo.gif)
 
 ## Quick start
 ```sh
