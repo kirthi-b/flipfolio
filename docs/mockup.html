@@ -4,10 +4,15 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>flipfolio capture stage</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;600&family=Fragment+Mono&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../src/folder-gallery.css">
   <style>
-    /* A capture stage for launch clips: the gallery floats in a paper
-       window on a soft blurred wallpaper, in flipfolio's own palette. */
+    /* Capture stage for launch clips. Atmosphere borrowed from the
+       floating-window genre; everything else is the kirthi.studio system:
+       cool paper, pine accent, sharp corners, hairline borders, wide
+       grotesque wordmark, mono meta, dot grid. */
     * { box-sizing: border-box; }
     html, body { height: 100%; }
     body {
@@ -16,50 +21,71 @@
       overflow: hidden;
       display: grid;
       place-items: center;
-      background: #e9e2d4;
-      font: 14px/1.5 ui-sans-serif, system-ui, sans-serif;
+      background: #F0F4F2;
+      font: 14px/1.5 'Hanken Grotesk', ui-sans-serif, system-ui, sans-serif;
       cursor: none;
     }
-    /* wallpaper: warm blurred mesh */
+    /* wallpaper: cool blurred mesh, restrained */
     .mesh {
       position: fixed; inset: -20%;
       background:
-        radial-gradient(42% 55% at 18% 22%, #e8c96acc, transparent 70%),
-        radial-gradient(38% 48% at 82% 18%, #8fb5a3bb, transparent 70%),
-        radial-gradient(46% 60% at 78% 82%, #dd8f5ea8, transparent 70%),
-        radial-gradient(40% 52% at 22% 84%, #7f9db8b0, transparent 70%),
-        radial-gradient(60% 70% at 50% 50%, #f3f1ec, #e9e2d4);
-      filter: blur(60px) saturate(1.05);
+        radial-gradient(44% 58% at 16% 20%, rgba(126, 202, 202, 0.55), transparent 70%),
+        radial-gradient(40% 52% at 84% 16%, rgba(46, 106, 92, 0.28), transparent 70%),
+        radial-gradient(48% 62% at 80% 84%, rgba(179, 232, 232, 0.5), transparent 70%),
+        radial-gradient(42% 56% at 18% 86%, rgba(20, 69, 60, 0.16), transparent 70%),
+        radial-gradient(60% 70% at 50% 50%, #F0F4F2, #E4ECE8);
+      filter: blur(70px) saturate(1.02);
       transform: scale(1.1);
     }
-    /* the floating window */
+    /* the panel: frosted glass, sharp corners, hairline border */
     .window {
       position: relative;
       width: min(1080px, 90vw);
       aspect-ratio: 16 / 10;
-      background: #faf8f2;
-      border-radius: 18px;
-      box-shadow:
-        0 40px 90px rgba(40, 34, 20, 0.30),
-        0 12px 28px rgba(40, 34, 20, 0.16),
-        inset 0 1px 0 rgba(255, 255, 255, 0.7);
+      background: rgba(240, 244, 242, 0.55);
+      backdrop-filter: blur(28px) saturate(1.1);
+      -webkit-backdrop-filter: blur(28px) saturate(1.1);
+      border: 1px solid rgba(18, 40, 30, 0.22);
+      border-radius: 0;
+      box-shadow: 0 30px 70px rgba(18, 40, 30, 0.16);
       display: grid;
       place-items: center;
       overflow: hidden;
     }
+    /* her dot grid, inside the glass */
+    .window::before {
+      content: '';
+      position: absolute; inset: 0;
+      background-image: radial-gradient(rgba(18, 40, 30, 0.10) 1px, transparent 1px);
+      background-size: 22px 22px;
+      pointer-events: none;
+    }
     .corner {
       position: absolute;
-      font-size: 13px;
-      letter-spacing: 0.01em;
-      color: #8a857a;
       z-index: 5;
       user-select: none;
+      font-family: 'Fragment Mono', monospace;
+      font-size: 12px;
+      color: rgba(0, 0, 0, 0.6);
     }
-    .corner--tl { top: 20px; left: 24px; font-weight: 700; color: #1c1c1a; font-size: 15px; }
-    .corner--tr { top: 21px; right: 24px; }
-    .corner--bl { bottom: 20px; left: 24px; }
-    .corner--br { bottom: 20px; right: 24px; font-variant-numeric: tabular-nums; color: #1c1c1a; }
-    .corner--br span { color: #b5b0a4; }
+    .corner--tl {
+      top: 18px; left: 22px;
+      font-family: 'Unbounded', sans-serif;
+      font-weight: 600;
+      font-size: 15px;
+      letter-spacing: -0.01em;
+      color: rgba(0, 0, 0, 0.85);
+    }
+    .corner--tl b { color: #14453C; }
+    .corner--tr {
+      top: 22px; right: 22px;
+      font-size: 10.5px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    .corner--bl { bottom: 20px; left: 22px; }
+    .corner--br { bottom: 20px; right: 22px; font-variant-numeric: tabular-nums; }
+    .corner--br b { color: #14453C; font-weight: 700; }
 
     folder-gallery { display: block; }
     #fg.fg-root { --fg-peek-shift: -72%; }
@@ -81,10 +107,10 @@
 <body>
   <div class="mesh"></div>
   <div class="window">
-    <span class="corner corner--tl">flipfolio</span>
-    <span class="corner corner--tr">stack &middot; grid &middot; carousel</span>
+    <span class="corner corner--tl">flipfolio<b>.</b></span>
+    <span class="corner corner--tr">stack / grid / carousel</span>
     <span class="corner corner--bl">Scroll - or grab the front folder and throw it</span>
-    <span class="corner corner--br"><b id="pos">1</b> <span>of 5</span></span>
+    <span class="corner corner--br"><b id="pos">1</b> of 5</span>
     <folder-gallery id="fg" mode="stack" data-fg-theme="light" label="Global cities"></folder-gallery>
   </div>
   <div id="cursor">
