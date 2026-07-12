@@ -3,7 +3,7 @@
 City photos in this demo come from Wikimedia Commons:
 
 - `tokyo.jpg`: "Minato City, Tokyo, Japan (Night).jpg" by David Kernan, CC BY 4.0. Source: https://commons.wikimedia.org/wiki/File:Minato_City,_Tokyo,_Japan_(Night).jpg
-- `nairobi.jpg`: "A clash of worlds - Nairobi skyline from the Nairobi National park.jpg" by Shadychiri, CC BY 4.0. Source: https://commons.wikimedia.org/wiki/File:A_clash_of_worlds_-_Nairobi_skyline_from_the_Nairobi_National_park.jpg
+- `nairobi.jpg`: "Buffalo Nairobi Skyline Savannah Kenya May19 R1600769.jpg" by Timothy A. Gonsalves, CC BY-SA 4.0. Source: https://commons.wikimedia.org/wiki/File:Buffalo_Nairobi_Skyline_Savannah_Kenya_May19_R1600769.jpg
 - `sao-paulo.jpg`: "Sao Paulo Brazil Skyline Aerial, December 2024.jpg" by Spicypepper999, CC0. Source: https://commons.wikimedia.org/wiki/File:Sao_Paulo_Brazil_Skyline_Aerial,_December_2024.jpg
 - `copenhagen.jpg`: "2018 - Nyhavn on sunset.jpg" by Moahim, CC BY-SA 4.0. Source: https://commons.wikimedia.org/wiki/File:2018_-_Nyhavn_on_sunset.jpg
 - `mexico-city.jpg`: "Mexico City Reforma skyline (cropped).jpg" by Jonathan Salvador, CC BY-SA 4.0. Source: https://commons.wikimedia.org/wiki/File:Mexico_City_Reforma_skyline_(cropped).jpg
