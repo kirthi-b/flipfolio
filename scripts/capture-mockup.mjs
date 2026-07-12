@@ -35,31 +35,34 @@ const browser = await chromium.launch();
   const page = await ctx.newPage();
   await page.goto(`${BASE}/docs/mockup.html`);
   await page.waitForSelector('.fg-card');
-  await page.waitForTimeout(1000);
+  await page.waitForLoadState('networkidle'); // fonts + mesh settle without a fixed dead hold
+  await page.waitForTimeout(400);
 
   async function fling(dx, dy) {
     const b = await (await page.$('.fg-card.is-active')).boundingBox();
     const cx = b.x + b.width / 2, cy = b.y + b.height / 2;
-    await page.mouse.move(cx, cy, { steps: 8 });
-    await page.waitForTimeout(180);
+    await page.mouse.move(cx, cy, { steps: 6 });
+    await page.waitForTimeout(90);
     await page.mouse.down();
     await page.mouse.move(cx + dx, cy + dy, { steps: 12 });
     await page.mouse.up();
   }
 
-  await fling(-240, -50);
-  await page.waitForTimeout(1500);
-  await fling(-240, -40);
-  await page.waitForTimeout(1500);
-  await page.evaluate(() => window.fg.setMode('grid'));
-  await page.waitForTimeout(1600);
-  await page.evaluate(() => window.fg.setMode('stack'));
+  // Lead with the throw - it is the headline feature, so it opens the clip.
+  await fling(-250, -50);
   await page.waitForTimeout(1300);
+  await fling(-250, -40);
+  await page.waitForTimeout(1300);
+  // Then the tour: modes, then photos, then one more throw to close.
+  await page.evaluate(() => window.fg.setMode('grid'));
+  await page.waitForTimeout(1500);
+  await page.evaluate(() => window.fg.setMode('stack'));
+  await page.waitForTimeout(1100);
   await page.evaluate(() => window.setPhotos(true));
   await page.waitForLoadState('networkidle');
-  await page.waitForTimeout(1300);
-  await fling(-240, -50);
-  await page.waitForTimeout(1700);
+  await page.waitForTimeout(1200);
+  await fling(-250, -50);
+  await page.waitForTimeout(1600);
   await page.close();
   await ctx.close();
   console.log('mockup video recorded');
