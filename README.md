@@ -9,7 +9,7 @@ A gallery where every item is a folder: stack them, grid them, spin them.
 
 Started as a CSS 3D experiment; it now runs the [kirthi.studio](https://kirthi.studio) homepage. No framework, no dependencies.
 
-Live demo: [kirthi.studio/demos/flipfolio](https://kirthi.studio/demos/flipfolio/) · Edit it on [StackBlitz](https://stackblitz.com/github/kirthi-b/flipfolio/tree/master/examples/vanilla?file=main.js)
+Live demo: [kirthi.studio/demos/flipfolio](https://kirthi.studio/demos/flipfolio/), or edit it on [StackBlitz](https://stackblitz.com/github/kirthi-b/flipfolio/tree/master/examples/vanilla?file=main.js)
 
 > v0.2.0. New this release: grab the active folder and throw it.
 

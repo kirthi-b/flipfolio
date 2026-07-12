@@ -428,7 +428,7 @@
     function updateReadout() {
       const peekVal = peekOn ? (matchMedia('(hover: hover)').matches ? 'hover' : 'always') : 'off';
       const opts = [`mode: '${currentMode}'`, `peek: '${peekVal}'`];
-      readout.textContent = `createFolderGallery(el, { items, ${opts.join(', ')} })  ·  data-fg-theme="${currentTheme}"`;
+      readout.textContent = `createFolderGallery(el, { items, ${opts.join(', ')} })  /  data-fg-theme="${currentTheme}"`;
     }
     readout.addEventListener('click', () => {
       navigator.clipboard && navigator.clipboard.writeText(readout.textContent);
