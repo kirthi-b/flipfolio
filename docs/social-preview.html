@@ -2,52 +2,85 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>flipfolio social preview (1280×640)</title>
+  <title>flipfolio social preview (1280x640)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;600&family=Fragment+Mono&family=Hanken+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../src/folder-gallery.css">
   <style>
+    /* Matches the capture stage (docs/mockup.html): cool paper, teal mesh,
+       frosted sharp-cornered panel, dot grid, Unbounded + Fragment Mono. */
     * { box-sizing: border-box; margin: 0; }
     html, body { width: 1280px; height: 640px; overflow: hidden; }
     body {
-      background: #f3f1ec;
-      color: #1c1c1a;
-      font: 16px/1.5 ui-sans-serif, system-ui, "Helvetica Neue", sans-serif;
+      background: #F0F4F2;
+      color: rgba(0, 0, 0, 0.85);
+      font: 16px/1.5 'Hanken Grotesk', ui-sans-serif, system-ui, sans-serif;
+      position: relative;
+    }
+    .mesh {
+      position: absolute; inset: -15%;
+      background:
+        radial-gradient(44% 58% at 14% 18%, rgba(126, 202, 202, 0.55), transparent 70%),
+        radial-gradient(40% 52% at 86% 14%, rgba(46, 106, 92, 0.26), transparent 70%),
+        radial-gradient(48% 62% at 82% 86%, rgba(179, 232, 232, 0.5), transparent 70%),
+        radial-gradient(42% 56% at 16% 88%, rgba(20, 69, 60, 0.15), transparent 70%),
+        radial-gradient(60% 70% at 50% 50%, #F0F4F2, #E4ECE8);
+      filter: blur(60px) saturate(1.02);
+    }
+    .panel {
+      position: absolute; inset: 44px 48px;
+      background: rgba(240, 244, 242, 0.55);
+      backdrop-filter: blur(24px) saturate(1.1);
+      -webkit-backdrop-filter: blur(24px) saturate(1.1);
+      border: 1px solid rgba(18, 40, 30, 0.22);
+      box-shadow: 0 24px 60px rgba(18, 40, 30, 0.14);
       display: flex;
       align-items: center;
+      overflow: hidden;
+    }
+    .panel::before {
+      content: '';
+      position: absolute; inset: 0;
+      background-image: radial-gradient(rgba(18, 40, 30, 0.10) 1px, transparent 1px);
+      background-size: 22px 22px;
+      pointer-events: none;
     }
     .text {
-      flex: 0 0 520px;
-      padding: 0 0 0 84px;
+      flex: 0 0 470px;
+      padding: 0 0 0 64px;
+      position: relative; z-index: 2;
     }
     h1 {
-      font-size: 64px;
-      font-weight: 750;
-      letter-spacing: -0.03em;
-      line-height: 1.02;
-      margin-bottom: 20px;
-    }
-    .tag {
-      font-size: 22px;
-      line-height: 1.45;
-      color: #4a463e;
-      max-width: 30ch;
-      margin-bottom: 28px;
-    }
-    .chips { display: flex; gap: 10px; }
-    .chip {
-      font-size: 15px;
+      font-family: 'Unbounded', sans-serif;
+      font-size: 56px;
       font-weight: 600;
-      padding: 7px 14px;
-      border: 1.5px solid #1c1c1a;
-      border-radius: 999px;
-      background: transparent;
+      letter-spacing: -0.01em;
+      line-height: 1.04;
+      margin-bottom: 18px;
     }
-    .chip--accent { background: #1f6f6f; border-color: #1f6f6f; color: #f3f1ec; }
+    h1 b { color: #14453C; }
+    .tag {
+      font-size: 21px;
+      line-height: 1.45;
+      color: rgba(0, 0, 0, 0.7);
+      max-width: 28ch;
+      margin-bottom: 26px;
+    }
+    .meta {
+      font-family: 'Fragment Mono', monospace;
+      font-size: 13px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: rgba(0, 0, 0, 0.6);
+    }
+    .meta b { color: #14453C; font-weight: 400; }
     .stage {
       flex: 1;
       display: flex;
       justify-content: center;
-      /* nudge the stack down so the folder sits like it's on a desk */
-      padding-top: 90px;
+      padding-top: 150px;
+      position: relative; z-index: 2;
     }
     .stage .fg-root { --fg-transition-transform: 1ms; --fg-transition-fade: 1ms; }
     .stage .fg-scene { width: 560px; height: 520px; }
@@ -55,17 +88,16 @@
   </style>
 </head>
 <body>
-  <div class="text">
-    <h1>flip-<br>folio</h1>
-    <p class="tag">A 3D folder gallery for real content. Stack, grid, and carousel.</p>
-    <div class="chips">
-      <span class="chip chip--accent">3 modes</span>
-      <span class="chip">zero deps</span>
-      <span class="chip">accessible</span>
+  <div class="mesh"></div>
+  <div class="panel">
+    <div class="text">
+      <h1>flip-<br>folio<b>.</b></h1>
+      <p class="tag">A 3D folder gallery for real content. Stack, grid, and carousel.</p>
+      <p class="meta"><b>3 modes</b> / zero deps / accessible</p>
     </div>
-  </div>
-  <div class="stage">
-    <div id="fg" data-fg-theme="light"></div>
+    <div class="stage">
+      <div id="fg" data-fg-theme="light"></div>
+    </div>
   </div>
   <script type="module">
     import { createFolderGallery } from '../src/folder-gallery.js';
@@ -79,6 +111,7 @@
       })),
       mode: 'stack',
       reducedMotion: 'force',
+      drag: 'off',
     });
   </script>
 </body>
