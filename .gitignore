@@ -2,3 +2,6 @@ node_modules/
 dist/
 .DS_Store
 *.log
+
+# scratch: raw capture recordings (converted to gif/mp4, then discarded)
+assets/_video/
