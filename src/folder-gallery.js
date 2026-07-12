@@ -502,15 +502,21 @@ export function createFolderGallery(root, options = {}) {
            a folder back into a pile looks like. */
         card.classList.add('fg-card--snap');
         goTo(target);
-        void card.offsetWidth;                    // commit the slot layout
         const slot = card.style.transform;
         const slotOpacity = card.style.opacity;
         card.style.transform = `${slot} translate3d(0, -90px, 0)`;
         card.style.opacity = '0';
-        void card.offsetWidth;                    // commit the staging point
-        card.classList.remove('fg-card--snap');   // transitions back on
-        card.style.transform = slot;              // descend into the pile
-        card.style.opacity = slotOpacity;
+        /* Phase boundary via double rAF, NOT a synchronous reflow flush:
+           WebKit does not treat forced reflows as transition boundaries and
+           will compute the transition from the last PAINTED state (the
+           fling-off position), which flashes the card across the pile.
+           Painting one real frame at the staging point (invisible,
+           transitions off) gives every engine the same before-state. */
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+          card.classList.remove('fg-card--snap'); // transitions back on
+          card.style.transform = slot;            // descend into the pile
+          card.style.opacity = slotOpacity;
+        }));
       }, 240);
     };
     on(window, 'pointerup', endDrag);
