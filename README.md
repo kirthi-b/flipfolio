@@ -91,6 +91,7 @@ Per-folder tab colors, tokens for radius and blur, and the silhouette itself is 
 | `items` | `Item[]` | `[]` | `{ label?, color?, src?, content?, decal?, ...data }` |
 | `mode` | `'stack'\|'grid'\|'carousel'` | `'stack'` | 3 modes (a 4th "shelf" is planned) |
 | `peek` | `'hover'\|'always'\|'off'` | `'hover'` | contents slide out of the folder |
+| `drag` | `'fling'\|'off'` | `'fling'` | grab the active folder and throw it (stack mode) |
 | `contentRenderer` | `(card, item, i) => void` | built-in | fills the folder interior with whatever you render |
 | `onSelect` | `(item, i) => void` | (none) | fired on click/Enter of the active folder (no built-in navigation) |
 | `folderPath` | `string` | manila default | SVG path `d` (viewBox `0 0 480 342`) |

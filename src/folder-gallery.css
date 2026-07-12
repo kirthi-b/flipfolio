@@ -98,6 +98,18 @@
   outline: none;
 }
 .fg-card.is-active { cursor: default; }
+
+/* ── drag: grab the active folder and throw it (stack mode) ── */
+[data-fg-drag='fling'][data-fg-mode='stack'] .fg-card.is-active {
+  cursor: grab;
+  /* the gesture owns the pointer; without this, touch drags scroll the page */
+  touch-action: none;
+}
+.fg-card--dragging,
+[data-fg-drag='fling'][data-fg-mode='stack'] .fg-card--dragging {
+  transition: none;
+  cursor: grabbing;
+}
 .fg-card:focus-visible {
   outline: 2px solid var(--fg-dot-active);
   outline-offset: 4px;

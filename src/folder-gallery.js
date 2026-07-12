@@ -30,11 +30,13 @@ const DEFAULTS = {
   scrollNav: true,
   reducedMotion: 'auto',   // 'auto' | 'off' | 'force'
   peek: 'hover',           // 'hover' | 'always' | 'off'
+  drag: 'fling',           // 'fling' | 'off' - grab the active folder and throw it (stack mode)
   defaultActiveIndex: 0,
   label: 'Folder gallery',
 };
 
 const PEEK_MODES = new Set(['hover', 'always', 'off']);
+const DRAG_MODES = new Set(['fling', 'off']);
 
 const MODE_WIDTHS = { stack: 480, grid: 720, carousel: 720 };
 const SCROLL_THRESHOLD = 30;
@@ -119,6 +121,7 @@ export function createFolderGallery(root, options = {}) {
   root.classList.add('fg-root');
   root.setAttribute('data-fg-mode', mode);
   root.setAttribute('data-fg-peek', PEEK_MODES.has(opts.peek) ? opts.peek : 'hover');
+  root.setAttribute('data-fg-drag', DRAG_MODES.has(opts.drag) ? opts.drag : 'fling');
   const scene = document.createElement('div');
   scene.className = 'fg-scene';
   scene.setAttribute('role', 'listbox');
@@ -140,6 +143,7 @@ export function createFolderGallery(root, options = {}) {
     root.classList.remove('fg-root');
     root.removeAttribute('data-fg-mode');
     root.removeAttribute('data-fg-peek');
+    root.removeAttribute('data-fg-drag');
   }
 
   if (n === 0) {
@@ -331,8 +335,14 @@ export function createFolderGallery(root, options = {}) {
   }
 
   /* ── Interaction ── */
+  const dragEnabled = opts.drag !== 'off';
+  let suppressClick = false; // a real drag eats the click that follows pointerup
+
   cardEls.forEach((card, i) => {
-    on(card, 'click', () => { i === active ? select(i) : goTo(i); });
+    on(card, 'click', () => {
+      if (suppressClick) { suppressClick = false; return; }
+      i === active ? select(i) : goTo(i);
+    });
     on(card, 'keydown', (e) => {
       if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); select(i); }
     });
@@ -401,6 +411,9 @@ export function createFolderGallery(root, options = {}) {
     touchStartY = e.touches[0].clientY;
   }, { passive: true });
   on(scene, 'touchend', (e) => {
+    // In stack mode the pointer-based drag below owns the gesture; letting
+    // both fire would advance twice per swipe.
+    if (dragEnabled && mode === 'stack') return;
     const dx = touchStartX - e.changedTouches[0].clientX;
     const dy = touchStartY - e.changedTouches[0].clientY;
     const ax = Math.abs(dx);
@@ -409,6 +422,77 @@ export function createFolderGallery(root, options = {}) {
     const dir = ax > ay ? (dx > 0 ? 1 : -1) : (dy > 0 ? 1 : -1);
     goTo(active + dir);
   }, { passive: true });
+
+  /* ── Drag: grab the active folder and throw it (stack mode) ──
+     Pointer Events give one code path for mouse, touch, and pen. The
+     gesture constants come from the folder-deck prototype this feature is
+     ported from: rotation follows the drag at 0.04deg/px, a release past
+     90px of travel (or a genuine throw, over 0.5px/ms) flings the folder
+     off along the dominant axis and advances; anything shorter springs
+     back into the pile on the card's own transition. Direction keeps the
+     swipe semantics: left or up is next, right or down is previous. */
+  if (dragEnabled) {
+    const DRAG_ROT = 0.04;
+    const FLING_DIST = 90;
+    const FLING_VEL = 0.5;
+    const TAP_SLOP = 6;
+    let dragCard = null;
+    let dragBase = '';
+    let startPX = 0, startPY = 0, dragDX = 0, dragDY = 0;
+    let lastX = 0, lastY = 0, lastT = 0, velX = 0, velY = 0;
+
+    on(scene, 'pointerdown', (e) => {
+      if (mode !== 'stack') return;
+      if (e.button !== undefined && e.button !== 0) return;
+      const card = e.target && e.target.closest ? e.target.closest('.fg-card') : null;
+      if (!card || !card.classList.contains('is-active')) return;
+      dragCard = card;
+      dragBase = card.style.transform;
+      startPX = e.clientX; startPY = e.clientY;
+      dragDX = 0; dragDY = 0;
+      lastX = e.clientX; lastY = e.clientY;
+      lastT = (typeof performance !== 'undefined' ? performance.now() : Date.now());
+      velX = 0; velY = 0;
+      card.classList.add('fg-card--dragging');
+      if (card.setPointerCapture && e.pointerId !== undefined) {
+        try { card.setPointerCapture(e.pointerId); } catch (_) { /* jsdom / detached */ }
+      }
+    });
+    on(window, 'pointermove', (e) => {
+      if (!dragCard) return;
+      dragDX = e.clientX - startPX;
+      dragDY = e.clientY - startPY;
+      const now = (typeof performance !== 'undefined' ? performance.now() : Date.now());
+      const dt = Math.max(now - lastT, 1);
+      velX = (e.clientX - lastX) / dt;
+      velY = (e.clientY - lastY) / dt;
+      lastX = e.clientX; lastY = e.clientY; lastT = now;
+      dragCard.style.transform = `${dragBase} translate(${dragDX}px, ${dragDY}px) rotate(${(dragDX * DRAG_ROT).toFixed(2)}deg)`;
+    });
+    const endDrag = () => {
+      if (!dragCard) return;
+      const card = dragCard;
+      dragCard = null;
+      card.classList.remove('fg-card--dragging');
+      const dist = Math.hypot(dragDX, dragDY);
+      if (dist < TAP_SLOP) { card.style.transform = dragBase; return; } // a tap: the click handler owns it
+      suppressClick = true;
+      const horizontal = Math.abs(dragDX) >= Math.abs(dragDY);
+      const flung = dist > FLING_DIST || Math.hypot(velX, velY) > FLING_VEL;
+      const dir = horizontal ? (dragDX > 0 ? -1 : 1) : (dragDY > 0 ? -1 : 1);
+      const target = active + dir;
+      const blocked = !opts.loop && (target < 0 || target > n - 1);
+      if (!flung || blocked) { card.style.transform = dragBase; return; } // spring back into the pile
+      if (reduced) { goTo(target); return; }
+      const offX = horizontal ? Math.sign(dragDX) * Math.max(window.innerWidth * 0.7, 480) : dragDX * 3;
+      const offY = horizontal ? dragDY * 3 : Math.sign(dragDY) * Math.max(window.innerHeight * 0.7, 480);
+      card.style.transform = `${dragBase} translate(${offX}px, ${offY}px) rotate(${Math.sign(dragDX || 1) * 18}deg)`;
+      card.style.opacity = '0';
+      setTimeout(() => goTo(target), 240); // relayout restores transform and opacity
+    };
+    on(window, 'pointerup', endDrag);
+    on(window, 'pointercancel', endDrag);
+  }
 
   let resizeTimer;
   on(window, 'resize', () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(applyLayout, 150); });

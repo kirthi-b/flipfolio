@@ -1,10 +1,11 @@
 import type { ComponentType, CSSProperties, Ref } from 'react';
-import type { FolderItem, GalleryMode, PeekMode, FolderGalleryOptions, FolderGalleryHandle } from './index';
+import type { FolderItem, GalleryMode, PeekMode, DragMode, FolderGalleryOptions, FolderGalleryHandle } from './index';
 
 export interface FolderGalleryProps {
   items: FolderItem[];
   mode?: GalleryMode;
   peek?: PeekMode;
+  drag?: DragMode;
   contentRenderer?: FolderGalleryOptions['contentRenderer'];
   onSelect?: (item: FolderItem, index: number) => void;
   onActiveChange?: (index: number, item: FolderItem) => void;
