@@ -88,8 +88,18 @@
     .corner--br b { color: #14453C; font-weight: 700; }
 
     folder-gallery { display: block; }
+    .stage { transform-origin: center center; }
     #fg.fg-root { --fg-peek-shift: -72%; }
     .fg-dots { display: none; } /* the counter is the position cue in this frame */
+
+    /* phones: portrait panel, quieter chrome; fit() scales the gallery */
+    @media (max-width: 700px) {
+      .window { width: 94vw; aspect-ratio: 3 / 4; }
+      .corner--tl { font-size: 13px; top: 14px; left: 16px; }
+      .corner--tr { display: none; }
+      .corner--bl { font-size: 10px; bottom: 14px; left: 16px; right: 72px; }
+      .corner--br { font-size: 11px; bottom: 14px; right: 16px; }
+    }
 
     /* fake cursor so recordings show the hand */
     #cursor {
@@ -102,6 +112,7 @@
     #cursor .hand { display: none; }
     #cursor.grab .arrow { display: none; }
     #cursor.grab .hand { display: block; }
+    @media (hover: none) { #cursor { display: none; } body { cursor: auto; } }
   </style>
 </head>
 <body>
@@ -111,7 +122,9 @@
     <span class="corner corner--tr">stack / grid / carousel</span>
     <span class="corner corner--bl">Scroll - or grab the front folder and throw it</span>
     <span class="corner corner--br"><b id="pos">1</b> of 5</span>
-    <folder-gallery id="fg" mode="stack" data-fg-theme="light" label="Global cities"></folder-gallery>
+    <div class="stage" id="stage">
+      <folder-gallery id="fg" mode="stack" data-fg-theme="light" label="Global cities"></folder-gallery>
+    </div>
   </div>
   <div id="cursor">
     <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -149,6 +162,19 @@
     fg.addEventListener('fg-activechange', (e) => {
       pos.textContent = String(e.detail.index + 1);
     });
+
+    // scale the gallery to the panel so phones do not clip it
+    const stage = document.getElementById('stage');
+    const win = document.querySelector('.window');
+    function fit() {
+      const w = win.clientWidth, h = win.clientHeight;
+      const gw = fg.offsetWidth || 1, gh = fg.offsetHeight || 1;
+      const scale = Math.min(1, (w * 0.86) / gw, (h * 0.60) / gh);
+      stage.style.transform = `scale(${scale.toFixed(3)})`;
+    }
+    new ResizeObserver(fit).observe(win);
+    fg.addEventListener('fg-modechange', () => setTimeout(fit, 60));
+    fit();
 
     // fake cursor follows the real (synthetic) pointer
     const cur = document.getElementById('cursor');
