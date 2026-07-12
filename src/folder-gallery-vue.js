@@ -26,6 +26,7 @@ export const FolderGallery = defineComponent({
     items: { type: Array, default: () => [] },
     mode: { type: String, default: 'stack' },
     peek: { type: String, default: 'hover' },
+    drag: { type: String, default: 'fling' },
     contentRenderer: { type: Function, default: undefined },
     folderPath: { type: String, default: undefined },
     loop: { type: Boolean, default: undefined },
@@ -51,6 +52,7 @@ export const FolderGallery = defineComponent({
         items: props.items,
         mode: props.mode,
         peek: props.peek,
+        drag: props.drag,
         folderPath: props.folderPath,
         loop: props.loop,
         scrollNav: props.scrollNav,
@@ -84,6 +86,7 @@ export const FolderGallery = defineComponent({
     watch(
       [
         () => props.items,
+        () => props.drag,
         () => props.folderPath,
         () => props.loop,
         () => props.scrollNav,

@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>flipfolio capture stage</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;600&family=Fragment+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../src/folder-gallery.css">
+  <style>
+    /* Capture stage for launch clips. Atmosphere borrowed from the
+       floating-window genre; everything else is the kirthi.studio system:
+       cool paper, pine accent, sharp corners, hairline borders, wide
+       grotesque wordmark, mono meta, dot grid. */
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      height: 100dvh;
+      overflow: hidden;
+      display: grid;
+      place-items: center;
+      background: #F0F4F2;
+      font: 14px/1.5 'Hanken Grotesk', ui-sans-serif, system-ui, sans-serif;
+      cursor: none;
+    }
+    /* wallpaper: cool blurred mesh, restrained */
+    .mesh {
+      position: fixed; inset: -20%;
+      background:
+        radial-gradient(44% 58% at 16% 20%, rgba(126, 202, 202, 0.55), transparent 70%),
+        radial-gradient(40% 52% at 84% 16%, rgba(46, 106, 92, 0.28), transparent 70%),
+        radial-gradient(48% 62% at 80% 84%, rgba(179, 232, 232, 0.5), transparent 70%),
+        radial-gradient(42% 56% at 18% 86%, rgba(20, 69, 60, 0.16), transparent 70%),
+        radial-gradient(60% 70% at 50% 50%, #F0F4F2, #E4ECE8);
+      filter: blur(70px) saturate(1.02);
+      transform: scale(1.1);
+    }
+    /* the panel: frosted glass, sharp corners, hairline border */
+    .window {
+      position: relative;
+      width: min(1080px, 90vw);
+      aspect-ratio: 16 / 10;
+      background: rgba(240, 244, 242, 0.55);
+      backdrop-filter: blur(28px) saturate(1.1);
+      -webkit-backdrop-filter: blur(28px) saturate(1.1);
+      border: 1px solid rgba(18, 40, 30, 0.22);
+      border-radius: 0;
+      box-shadow: 0 30px 70px rgba(18, 40, 30, 0.16);
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+    }
+    /* her dot grid, inside the glass */
+    .window::before {
+      content: '';
+      position: absolute; inset: 0;
+      background-image: radial-gradient(rgba(18, 40, 30, 0.10) 1px, transparent 1px);
+      background-size: 22px 22px;
+      pointer-events: none;
+    }
+    .corner {
+      position: absolute;
+      z-index: 5;
+      user-select: none;
+      font-family: 'Fragment Mono', monospace;
+      font-size: 12px;
+      color: rgba(0, 0, 0, 0.6);
+    }
+    .corner--tl {
+      top: 18px; left: 22px;
+      font-family: 'Unbounded', sans-serif;
+      font-weight: 600;
+      font-size: 15px;
+      letter-spacing: -0.01em;
+      color: rgba(0, 0, 0, 0.85);
+    }
+    .corner--tl b { color: #14453C; }
+    .corner--tr {
+      top: 22px; right: 22px;
+      font-size: 10.5px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    .corner--bl { bottom: 20px; left: 22px; }
+    .corner--br { bottom: 20px; right: 22px; font-variant-numeric: tabular-nums; }
+    .corner--br b { color: #14453C; font-weight: 700; }
+
+    folder-gallery { display: block; }
+    .stage { transform-origin: center center; }
+    #fg.fg-root { --fg-peek-shift: -72%; }
+    .fg-dots { display: none; } /* the counter is the position cue in this frame */
+
+    /* phones: portrait panel, quieter chrome; fit() scales the gallery */
+    @media (max-width: 700px) {
+      .window { width: 94vw; aspect-ratio: 3 / 4; }
+      .corner--tl { font-size: 13px; top: 14px; left: 16px; }
+      .corner--tr { display: none; }
+      .corner--bl { font-size: 10px; bottom: 14px; left: 16px; right: 72px; }
+      .corner--br { font-size: 11px; bottom: 14px; right: 16px; }
+    }
+
+    /* fake cursor so recordings show the hand */
+    #cursor {
+      position: fixed; z-index: 99; pointer-events: none;
+      width: 26px; height: 26px;
+      transform: translate(-4px, -2px);
+      transition: transform 60ms ease-out;
+    }
+    #cursor svg { width: 100%; height: 100%; filter: drop-shadow(0 1px 2px rgba(0,0,0,.35)); }
+    #cursor .hand { display: none; }
+    #cursor.grab .arrow { display: none; }
+    #cursor.grab .hand { display: block; }
+    @media (hover: none) { #cursor { display: none; } body { cursor: auto; } }
+  </style>
+</head>
+<body>
+  <div class="mesh"></div>
+  <div class="window">
+    <span class="corner corner--tl">flipfolio<b>.</b></span>
+    <span class="corner corner--tr">stack / grid / carousel</span>
+    <span class="corner corner--bl">Scroll - or grab the front folder and throw it</span>
+    <span class="corner corner--br"><b id="pos">1</b> of 5</span>
+    <div class="stage" id="stage">
+      <folder-gallery id="fg" mode="stack" data-fg-theme="light" label="Global cities"></folder-gallery>
+    </div>
+  </div>
+  <div id="cursor">
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path class="arrow" d="M5 3 L5 17 L9 13.5 L11.5 19 L14 18 L11.5 12.5 L17 12.5 Z" fill="#fff" stroke="#1c1c1a" stroke-width="1.4" stroke-linejoin="round"/>
+      <g class="hand">
+        <path d="M8 12 V6.5 a1.5 1.5 0 0 1 3 0 V11 m0-4.5 a1.5 1.5 0 0 1 3 0 V11 m0-3.5 a1.5 1.5 0 0 1 3 0 V12 m0-2 a1.4 1.4 0 0 1 2.8 0 V15 a6 6 0 0 1-6 6 h-1.6 a6 6 0 0 1-5-2.7 L4.6 14.6 a1.5 1.5 0 0 1 2.5-1.7 L8 14.5" fill="#fff" stroke="#1c1c1a" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round"/>
+      </g>
+    </svg>
+  </div>
+
+  <script type="module">
+    import { defineFolderGallery } from '../src/folder-gallery-element.js';
+    defineFolderGallery();
+
+    const MANILA = ['#e8c96a', '#dd8f5e', '#8fb5a3', '#e2cf8f', '#b58fb5'];
+    const PHOTO_COLORS = { 'tokyo': '#13303f', 'nairobi': '#75754f', 'sao-paulo': '#8a7259', 'copenhagen': '#4f6b7c', 'mexico-city': '#3d7dae' };
+    const CITIES = [
+      { label: 'Tokyo', slug: 'tokyo' },
+      { label: 'Nairobi', slug: 'nairobi' },
+      { label: 'São Paulo', slug: 'sao-paulo' },
+      { label: 'Copenhagen', slug: 'copenhagen' },
+      { label: 'Mexico City', slug: 'mexico-city' },
+    ];
+    const fg = document.getElementById('fg');
+    const pos = document.getElementById('pos');
+
+    window.setPhotos = (on) => {
+      fg.items = CITIES.map((c, i) => ({
+        label: c.label,
+        color: on ? PHOTO_COLORS[c.slug] : MANILA[i],
+        ...(on && { decal: `./photos/${c.slug}.jpg` }),
+      }));
+    };
+    window.setPhotos(false);
+    fg.addEventListener('fg-activechange', (e) => {
+      pos.textContent = String(e.detail.index + 1);
+    });
+
+    // scale the gallery to the panel so phones do not clip it
+    const stage = document.getElementById('stage');
+    const win = document.querySelector('.window');
+    function fit() {
+      const w = win.clientWidth, h = win.clientHeight;
+      const gw = fg.offsetWidth || 1, gh = fg.offsetHeight || 1;
+      const scale = Math.min(1, (w * 0.86) / gw, (h * 0.60) / gh);
+      stage.style.transform = `scale(${scale.toFixed(3)})`;
+    }
+    new ResizeObserver(fit).observe(win);
+    fg.addEventListener('fg-modechange', () => setTimeout(fit, 60));
+    fit();
+
+    // fake cursor follows the real (synthetic) pointer
+    const cur = document.getElementById('cursor');
+    addEventListener('mousemove', (e) => { cur.style.left = e.clientX + 'px'; cur.style.top = e.clientY + 'px'; });
+    addEventListener('mousedown', () => cur.classList.add('grab'));
+    addEventListener('mouseup', () => cur.classList.remove('grab'));
+  </script>
+</body>
+</html>

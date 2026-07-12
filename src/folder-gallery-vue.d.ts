@@ -1,10 +1,11 @@
 import type { DefineComponent } from 'vue';
-import type { FolderItem, GalleryMode, PeekMode, FolderGalleryOptions, FolderGalleryHandle } from './index';
+import type { FolderItem, GalleryMode, PeekMode, DragMode, FolderGalleryOptions, FolderGalleryHandle } from './index';
 
 export interface FolderGalleryProps {
   items?: FolderItem[];
   mode?: GalleryMode;
   peek?: PeekMode;
+  drag?: DragMode;
   contentRenderer?: FolderGalleryOptions['contentRenderer'];
   folderPath?: string;
   loop?: boolean;

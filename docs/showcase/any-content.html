@@ -3,31 +3,67 @@
 <head>
   <meta charset="utf-8">
   <title>showcase: any content</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;600&family=Fragment+Mono&family=Hanken+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../../src/folder-gallery.css">
   <style>
     * { box-sizing: border-box; margin: 0; }
     html, body { width: 1760px; height: 820px; overflow: hidden; }
     body {
-      background: radial-gradient(1400px 650px at 50% -10%, #1c2230, #101216 60%);
-      color: #e9e9e6;
-      font: 16px/1.5 ui-sans-serif, system-ui, "Helvetica Neue", sans-serif;
+      background: #F0F4F2;
+      color: rgba(0, 0, 0, 0.85);
+      font: 16px/1.5 'Hanken Grotesk', ui-sans-serif, system-ui, sans-serif;
+      position: relative;
     }
-    header { text-align: center; padding-top: 60px; }
-    h2 { font-size: 52px; font-weight: 750; letter-spacing: -0.03em; }
-    header p { color: #a7adb8; font-size: 20px; margin-top: 10px; }
-    header code { font: 17px/1 ui-monospace, monospace; background: #20242c; padding: 3px 9px; border-radius: 6px; }
-    .row { display: flex; justify-content: center; gap: 40px; margin-top: 130px; }
+    .mesh {
+      position: absolute; inset: -15%;
+      background:
+        radial-gradient(44% 58% at 14% 18%, rgba(126, 202, 202, 0.55), transparent 70%),
+        radial-gradient(40% 52% at 86% 14%, rgba(46, 106, 92, 0.26), transparent 70%),
+        radial-gradient(48% 62% at 82% 86%, rgba(179, 232, 232, 0.5), transparent 70%),
+        radial-gradient(42% 56% at 16% 88%, rgba(20, 69, 60, 0.15), transparent 70%),
+        radial-gradient(60% 70% at 50% 50%, #F0F4F2, #E4ECE8);
+      filter: blur(60px) saturate(1.02);
+    }
+    .sheet {
+      position: absolute; inset: 36px 40px;
+      background: rgba(240, 244, 242, 0.55);
+      backdrop-filter: blur(24px) saturate(1.1);
+      -webkit-backdrop-filter: blur(24px) saturate(1.1);
+      border: 1px solid rgba(18, 40, 30, 0.22);
+      box-shadow: 0 24px 60px rgba(18, 40, 30, 0.14);
+      overflow: hidden;
+    }
+    .sheet::before {
+      content: '';
+      position: absolute; inset: 0;
+      background-image: radial-gradient(rgba(18, 40, 30, 0.10) 1px, transparent 1px);
+      background-size: 22px 22px;
+      pointer-events: none;
+    }
+    header { text-align: center; padding-top: 48px; position: relative; z-index: 2; }
+    h2 { font-family: 'Unbounded', sans-serif; font-size: 44px; font-weight: 600; letter-spacing: -0.01em; }
+    h2 b { color: #14453C; }
+    header p { color: rgba(0, 0, 0, 0.6); font-size: 19px; margin-top: 12px; }
+    header code {
+      font: 15px/1 'Fragment Mono', monospace;
+      background: rgba(18, 40, 30, 0.06);
+      border: 1px solid rgba(18, 40, 30, 0.18);
+      padding: 3px 9px;
+    }
+    .row { display: flex; justify-content: center; gap: 40px; margin-top: 118px; position: relative; z-index: 2; }
     .mini { display: flex; flex-direction: column; align-items: center; }
     .mini .fg-scene { width: 350px !important; height: 350px; }
     .mini .fg-dots { display: none; }
     .fg-root { --fg-transition-transform: 1ms; --fg-transition-fade: 1ms; }
-    .mini .cap { margin-top: 16px; font: 15px/1 ui-monospace, monospace; color: #7c828d; }
+    .mini .cap { margin-top: 16px; font: 14px/1 'Fragment Mono', monospace; color: rgba(0, 0, 0, 0.55); }
     /* Lift the contents out of the folder so each type reads clearly;
        inset from the left so the folder tab stays visible. */
     .mini .fg-content {
       top: -40%; bottom: 44%; left: 18%; right: 6%;
       border-radius: 8px;
-      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.4);
+      box-shadow: 0 16px 36px rgba(18, 40, 30, 0.25);
       background: #fdfcf9;
       padding: 6px;
     }
@@ -53,8 +89,10 @@
   </style>
 </head>
 <body>
+  <div class="mesh"></div>
+  <div class="sheet">
   <header>
-    <h2>Folders hold anything</h2>
+    <h2>Folders hold anything<b>.</b></h2>
     <p><code>item.src</code> for images, <code>item.content</code> for markup or a DOM node, <code>contentRenderer</code> for everything else.</p>
   </header>
   <div class="row">
@@ -62,6 +100,7 @@
     <div class="mini"><div id="m2" data-fg-theme="dark"></div><div class="cap">item.content: document</div></div>
     <div class="mini"><div id="m3" data-fg-theme="dark"></div><div class="cap">item.content: SVG chart</div></div>
     <div class="mini"><div id="m4" data-fg-theme="dark"></div><div class="cap">contentRenderer</div></div>
+  </div>
   </div>
   <script type="module">
     import { createFolderGallery } from '../../src/folder-gallery.js';

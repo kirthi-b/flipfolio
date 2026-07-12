@@ -23,6 +23,7 @@ export const FolderGallery = forwardRef(function FolderGallery(props, ref) {
     items,
     mode = 'stack',
     peek = 'hover',
+    drag = 'fling',
     contentRenderer,
     onSelect,
     onActiveChange,
@@ -55,6 +56,7 @@ export const FolderGallery = forwardRef(function FolderGallery(props, ref) {
       items,
       mode,
       peek,
+      drag,
       folderPath,
       loop,
       scrollNav,
@@ -90,7 +92,7 @@ export const FolderGallery = forwardRef(function FolderGallery(props, ref) {
     };
     // mode and peek are handled by the effects below without a rebuild.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [items, folderPath, loop, scrollNav, reducedMotion, defaultActiveIndex, label]);
+  }, [items, drag, folderPath, loop, scrollNav, reducedMotion, defaultActiveIndex, label]);
 
   // Mode changes reuse the live instance.
   useEffect(() => {

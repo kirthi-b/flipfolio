@@ -15,6 +15,7 @@ export interface FolderItem {
 
 export type GalleryMode = 'stack' | 'grid' | 'carousel';
 export type PeekMode = 'hover' | 'always' | 'off';
+export type DragMode = 'fling' | 'off';
 
 export interface FolderGalleryOptions {
   items?: FolderItem[];
@@ -30,6 +31,8 @@ export interface FolderGalleryOptions {
   reducedMotion?: 'auto' | 'off' | 'force';
   /** Contents sliding out of the folder: on hover (default), always, or off. */
   peek?: PeekMode;
+  /** Grab the active folder and throw it to navigate (stack mode). Default 'fling'. */
+  drag?: DragMode;
   defaultActiveIndex?: number;
   /** aria-label for the listbox. */
   label?: string;

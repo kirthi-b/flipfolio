@@ -3,26 +3,65 @@
 <head>
   <meta charset="utf-8">
   <title>showcase: real content</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;600&family=Fragment+Mono&family=Hanken+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../../src/folder-gallery.css">
   <style>
+    /* System shell shared with docs/mockup.html. */
     * { box-sizing: border-box; margin: 0; }
     html, body { width: 1600px; height: 900px; overflow: hidden; }
     body {
-      background: #f3f1ec;
-      color: #1c1c1a;
-      font: 16px/1.5 ui-sans-serif, system-ui, "Helvetica Neue", sans-serif;
+      background: #F0F4F2;
+      color: rgba(0, 0, 0, 0.85);
+      font: 16px/1.5 'Hanken Grotesk', ui-sans-serif, system-ui, sans-serif;
+      position: relative;
+    }
+    .mesh {
+      position: absolute; inset: -15%;
+      background:
+        radial-gradient(44% 58% at 14% 18%, rgba(126, 202, 202, 0.55), transparent 70%),
+        radial-gradient(40% 52% at 86% 14%, rgba(46, 106, 92, 0.26), transparent 70%),
+        radial-gradient(48% 62% at 82% 86%, rgba(179, 232, 232, 0.5), transparent 70%),
+        radial-gradient(42% 56% at 16% 88%, rgba(20, 69, 60, 0.15), transparent 70%),
+        radial-gradient(60% 70% at 50% 50%, #F0F4F2, #E4ECE8);
+      filter: blur(60px) saturate(1.02);
+    }
+    .sheet {
+      position: absolute; inset: 40px 44px;
+      background: rgba(240, 244, 242, 0.55);
+      backdrop-filter: blur(24px) saturate(1.1);
+      -webkit-backdrop-filter: blur(24px) saturate(1.1);
+      border: 1px solid rgba(18, 40, 30, 0.22);
+      box-shadow: 0 24px 60px rgba(18, 40, 30, 0.14);
       display: flex;
       align-items: center;
+      overflow: hidden;
     }
-    .rail { flex: 0 0 420px; padding-left: 84px; }
-    h2 { font-size: 52px; font-weight: 750; letter-spacing: -0.03em; line-height: 1.05; margin-bottom: 18px; }
-    .rail p { font-size: 20px; line-height: 1.5; color: #4a463e; max-width: 26ch; }
+    .sheet::before {
+      content: '';
+      position: absolute; inset: 0;
+      background-image: radial-gradient(rgba(18, 40, 30, 0.10) 1px, transparent 1px);
+      background-size: 22px 22px;
+      pointer-events: none;
+    }
+    .rail { flex: 0 0 420px; padding-left: 68px; position: relative; z-index: 2; }
+    h2 {
+      font-family: 'Unbounded', sans-serif;
+      font-size: 46px; font-weight: 600; letter-spacing: -0.01em; line-height: 1.08;
+      margin-bottom: 18px;
+    }
+    h2 b { color: #14453C; }
+    .rail p { font-size: 19px; line-height: 1.5; color: rgba(0, 0, 0, 0.7); max-width: 26ch; }
     .rail code {
-      display: inline-block; margin-top: 22px; font: 15px/1.6 ui-monospace, monospace;
-      background: #eceade; border: 1px solid #d8d4c8; border-radius: 8px; padding: 12px 16px;
-      color: #3a3830; text-align: left;
+      display: inline-block; margin-top: 22px;
+      font: 14px/1.6 'Fragment Mono', monospace;
+      background: rgba(18, 40, 30, 0.06);
+      border: 1px solid rgba(18, 40, 30, 0.18);
+      padding: 12px 16px;
+      color: rgba(0, 0, 0, 0.7); text-align: left;
     }
-    .stage { flex: 1; display: flex; justify-content: center; padding-top: 150px; }
+    .stage { flex: 1; display: flex; justify-content: center; padding-top: 150px; position: relative; z-index: 2; }
     .stage .fg-root { --fg-transition-transform: 1ms; --fg-transition-fade: 1ms; }
     .stage .fg-dots { display: none; }
     /* Pull each photo up out of its folder, like a print being lifted out.
@@ -30,7 +69,7 @@
     .stage .fg-content {
       top: -34%; bottom: 48%; left: 22%; right: 6%;
       border-radius: 8px;
-      box-shadow: 0 16px 36px rgba(30, 30, 30, 0.22);
+      box-shadow: 0 16px 36px rgba(18, 40, 30, 0.22);
       background: #fff; padding: 5px;
     }
     /* Poster still: solid fronts everywhere, no frost smear over the photos. */
@@ -42,13 +81,16 @@
   </style>
 </head>
 <body>
-  <div class="rail">
-    <h2>Real<br>content</h2>
-    <p>Every folder holds what you put in it. These are project images, loaded with <b>item.src</b>.</p>
-    <code>{ label: 'Diversity',<br>&nbsp;&nbsp;color: '#8fb5a3',<br>&nbsp;&nbsp;src: '/img/diversity.png' }</code>
-  </div>
-  <div class="stage">
-    <div id="fg" data-fg-theme="light"></div>
+  <div class="mesh"></div>
+  <div class="sheet">
+    <div class="rail">
+      <h2>Real<br>content<b>.</b></h2>
+      <p>Every folder holds what you put in it. These are project images, loaded with <b>item.src</b>.</p>
+      <code>{ label: 'Diversity',<br>&nbsp;&nbsp;color: '#8fb5a3',<br>&nbsp;&nbsp;src: '/img/diversity.png' }</code>
+    </div>
+    <div class="stage">
+      <div id="fg" data-fg-theme="light"></div>
+    </div>
   </div>
   <script type="module">
     import { createFolderGallery } from '../../src/folder-gallery.js';
@@ -60,7 +102,7 @@
       { label: 'QoL for Children',color: '#e2cf8f', src: 'https://kirthi.studio/images/projects/qol-children/qol-1.png' },
       { label: 'Rideshare Equity',color: '#94a7c4', src: 'https://kirthi.studio/images/projects/chicago-rideshare/INCOME_Pickup.png' },
     ];
-    createFolderGallery(document.getElementById('fg'), { items, mode: 'grid', reducedMotion: 'force' });
+    createFolderGallery(document.getElementById('fg'), { items, mode: 'grid', reducedMotion: 'force', drag: 'off' });
   </script>
 </body>
 </html>

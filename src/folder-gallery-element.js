@@ -24,7 +24,7 @@ const ElementBase = typeof HTMLElement !== 'undefined' ? HTMLElement : class {};
 
 export class FolderGalleryElement extends ElementBase {
   static get observedAttributes() {
-    return ['mode', 'peek', 'loop', 'scroll-nav', 'reduced-motion', 'default-active-index', 'label', 'folder-path'];
+    return ['mode', 'peek', 'drag', 'loop', 'scroll-nav', 'reduced-motion', 'default-active-index', 'label', 'folder-path'];
   }
 
   constructor() {
@@ -61,6 +61,7 @@ export class FolderGalleryElement extends ElementBase {
     const opts = { items: this._items };
     if (this.hasAttribute('mode')) opts.mode = this.getAttribute('mode');
     if (this.hasAttribute('peek')) opts.peek = this.getAttribute('peek');
+    if (this.hasAttribute('drag')) opts.drag = this.getAttribute('drag');
     if (this.hasAttribute('loop')) opts.loop = asBool(this.getAttribute('loop'));
     if (this.hasAttribute('scroll-nav')) opts.scrollNav = asBool(this.getAttribute('scroll-nav'));
     if (this.hasAttribute('reduced-motion')) opts.reducedMotion = this.getAttribute('reduced-motion');

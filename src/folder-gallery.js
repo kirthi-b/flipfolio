@@ -30,11 +30,13 @@ const DEFAULTS = {
   scrollNav: true,
   reducedMotion: 'auto',   // 'auto' | 'off' | 'force'
   peek: 'hover',           // 'hover' | 'always' | 'off'
+  drag: 'fling',           // 'fling' | 'off' - grab the active folder and throw it (stack mode)
   defaultActiveIndex: 0,
   label: 'Folder gallery',
 };
 
 const PEEK_MODES = new Set(['hover', 'always', 'off']);
+const DRAG_MODES = new Set(['fling', 'off']);
 
 const MODE_WIDTHS = { stack: 480, grid: 720, carousel: 720 };
 const SCROLL_THRESHOLD = 30;
@@ -119,6 +121,7 @@ export function createFolderGallery(root, options = {}) {
   root.classList.add('fg-root');
   root.setAttribute('data-fg-mode', mode);
   root.setAttribute('data-fg-peek', PEEK_MODES.has(opts.peek) ? opts.peek : 'hover');
+  root.setAttribute('data-fg-drag', DRAG_MODES.has(opts.drag) ? opts.drag : 'fling');
   const scene = document.createElement('div');
   scene.className = 'fg-scene';
   scene.setAttribute('role', 'listbox');
@@ -140,6 +143,7 @@ export function createFolderGallery(root, options = {}) {
     root.classList.remove('fg-root');
     root.removeAttribute('data-fg-mode');
     root.removeAttribute('data-fg-peek');
+    root.removeAttribute('data-fg-drag');
   }
 
   if (n === 0) {
@@ -148,10 +152,16 @@ export function createFolderGallery(root, options = {}) {
 
   /* ── Normalized transform - identical function list for every mode ── */
   function setCardTransform(card, { x, y, z, rx, ry, s, zIndex, opacity, isActive }) {
-    card.style.transform = `translate3d(${x}px,${y}px,${z}px) rotateX(${rx}deg) rotateY(${ry}deg) scale(${s})`;
+    /* A card mid-throw owns its own motion: layout updates its role
+       (selection, stacking) but leaves transform and opacity to the fling,
+       so the pile can shuffle immediately while the thrown folder finishes
+       its flight. The fling handler relayouts it once it has faded out. */
+    if (!card.classList.contains('fg-card--flung')) {
+      card.style.transform = `translate3d(${x}px,${y}px,${z}px) rotateX(${rx}deg) rotateY(${ry}deg) scale(${s})`;
+      card.style.opacity = String(opacity);
+    }
     card.style.transformOrigin = 'center bottom';
     card.style.zIndex = String(zIndex);
-    card.style.opacity = String(opacity);
     card.setAttribute('aria-selected', isActive ? 'true' : 'false');
     card.classList.toggle('is-active', isActive);
   }
@@ -331,8 +341,14 @@ export function createFolderGallery(root, options = {}) {
   }
 
   /* ── Interaction ── */
+  const dragEnabled = opts.drag !== 'off';
+  let suppressClick = false; // a real drag eats the click that follows pointerup
+
   cardEls.forEach((card, i) => {
-    on(card, 'click', () => { i === active ? select(i) : goTo(i); });
+    on(card, 'click', () => {
+      if (suppressClick) { suppressClick = false; return; }
+      i === active ? select(i) : goTo(i);
+    });
     on(card, 'keydown', (e) => {
       if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); select(i); }
     });
@@ -401,6 +417,9 @@ export function createFolderGallery(root, options = {}) {
     touchStartY = e.touches[0].clientY;
   }, { passive: true });
   on(scene, 'touchend', (e) => {
+    // In stack mode the pointer-based drag below owns the gesture; letting
+    // both fire would advance twice per swipe.
+    if (dragEnabled && mode === 'stack') return;
     const dx = touchStartX - e.changedTouches[0].clientX;
     const dy = touchStartY - e.changedTouches[0].clientY;
     const ax = Math.abs(dx);
@@ -409,6 +428,109 @@ export function createFolderGallery(root, options = {}) {
     const dir = ax > ay ? (dx > 0 ? 1 : -1) : (dy > 0 ? 1 : -1);
     goTo(active + dir);
   }, { passive: true });
+
+  /* ── Drag: grab the active folder and throw it (stack mode) ──
+     Pointer Events give one code path for mouse, touch, and pen. The
+     gesture constants come from the folder-deck prototype this feature is
+     ported from: rotation follows the drag at 0.04deg/px, a release past
+     90px of travel (or a genuine throw, over 0.5px/ms) flings the folder
+     off along the dominant axis and advances; anything shorter springs
+     back into the pile on the card's own transition. Direction keeps the
+     swipe semantics: left or up is next, right or down is previous. */
+  if (dragEnabled) {
+    const DRAG_ROT = 0.04;
+    const FLING_DIST = 90;
+    const FLING_VEL = 0.5;
+    const TAP_SLOP = 6;
+    let dragCard = null;
+    let dragBase = '';
+    let startPX = 0, startPY = 0, dragDX = 0, dragDY = 0;
+    let lastX = 0, lastY = 0, lastT = 0, velX = 0, velY = 0;
+
+    on(scene, 'pointerdown', (e) => {
+      if (mode !== 'stack') return;
+      if (e.button !== undefined && e.button !== 0) return;
+      const card = e.target && e.target.closest ? e.target.closest('.fg-card') : null;
+      if (!card || !card.classList.contains('is-active')) return;
+      dragCard = card;
+      dragBase = card.style.transform;
+      startPX = e.clientX; startPY = e.clientY;
+      dragDX = 0; dragDY = 0;
+      lastX = e.clientX; lastY = e.clientY;
+      lastT = (typeof performance !== 'undefined' ? performance.now() : Date.now());
+      velX = 0; velY = 0;
+      card.classList.add('fg-card--dragging');
+      if (card.setPointerCapture && e.pointerId !== undefined) {
+        try { card.setPointerCapture(e.pointerId); } catch (_) { /* jsdom / detached */ }
+      }
+    });
+    on(window, 'pointermove', (e) => {
+      if (!dragCard) return;
+      dragDX = e.clientX - startPX;
+      dragDY = e.clientY - startPY;
+      const now = (typeof performance !== 'undefined' ? performance.now() : Date.now());
+      const dt = Math.max(now - lastT, 1);
+      velX = (e.clientX - lastX) / dt;
+      velY = (e.clientY - lastY) / dt;
+      lastX = e.clientX; lastY = e.clientY; lastT = now;
+      // translateZ lifts the grabbed folder clear of every plane in the
+      // pile (tilted tops can poke past the active card's resting depth)
+      // and reads as physically picking it up.
+      dragCard.style.transform = `${dragBase} translate3d(${dragDX}px, ${dragDY}px, 40px) rotate(${(dragDX * DRAG_ROT).toFixed(2)}deg)`;
+    });
+    const endDrag = () => {
+      if (!dragCard) return;
+      const card = dragCard;
+      dragCard = null;
+      card.classList.remove('fg-card--dragging');
+      const dist = Math.hypot(dragDX, dragDY);
+      if (dist < TAP_SLOP) { card.style.transform = dragBase; return; } // a tap: the click handler owns it
+      suppressClick = true;
+      const horizontal = Math.abs(dragDX) >= Math.abs(dragDY);
+      const flung = dist > FLING_DIST || Math.hypot(velX, velY) > FLING_VEL;
+      const dir = horizontal ? (dragDX > 0 ? -1 : 1) : (dragDY > 0 ? -1 : 1);
+      const target = active + dir;
+      const blocked = !opts.loop && (target < 0 || target > n - 1);
+      if (!flung || blocked) { card.style.transform = dragBase; return; } // spring back into the pile
+      if (reduced) { goTo(target); return; }
+      const offX = horizontal ? Math.sign(dragDX) * Math.max(window.innerWidth * 0.7, 480) : dragDX * 3;
+      const offY = horizontal ? dragDY * 3 : Math.sign(dragDY) * Math.max(window.innerHeight * 0.7, 480);
+      /* Choreography: the pile answers the throw IMMEDIATELY (goTo below;
+         layout skips the flung card), while the thrown folder finishes its
+         own flight - a longer, momentum-eased sail that fades over 340ms.
+         Once it is fully invisible, it re-enters by DROPPING IN from above
+         its new slot: never straight from off-screen, which would cross
+         the other folders' 3D planes and slice them visibly. */
+      card.classList.add('fg-card--flung');
+      card.style.transform = `${dragBase} translate3d(${offX}px, ${offY}px, 40px) rotate(${Math.sign(dragDX || 1) * 18}deg)`;
+      card.style.opacity = '0';
+      goTo(target); // shuffle starts now; the flung card is exempt from this relayout
+      setTimeout(() => {
+        card.classList.add('fg-card--snap');
+        card.classList.remove('fg-card--flung');
+        applyLayout(); // now it takes its slot transform (invisible, transitions off)
+        const slot = card.style.transform;
+        const slotOpacity = card.style.opacity;
+        card.style.transform = `${slot} translate3d(0, -90px, 0)`;
+        card.style.opacity = '0';
+        /* Phase boundary via double rAF, NOT a synchronous reflow flush:
+           WebKit does not treat forced reflows as transition boundaries and
+           will compute the transition from the last PAINTED state (the
+           fling-off position), which flashes the card across the pile.
+           Painting one real frame at the staging point (invisible,
+           transitions off) gives every engine the same before-state. */
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+          card.classList.remove('fg-card--snap');
+          card.classList.add('fg-card--entering'); // quicker settle curve for the drop
+          card.style.transform = slot;             // descend into the pile
+          card.style.opacity = slotOpacity;
+          setTimeout(() => card.classList.remove('fg-card--entering'), 700);
+        }));
+      }, 400); // after the 340ms flung fade, with margin: never snap a visible card
+    };
+    on(window, 'pointerup', endDrag);
+    on(window, 'pointercancel', endDrag);
+  }
 
   let resizeTimer;
   on(window, 'resize', () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(applyLayout, 150); });

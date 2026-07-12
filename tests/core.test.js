@@ -229,3 +229,79 @@ describe('decal', () => {
     expect(root.querySelector('.fg-decal')).toBeFalsy();
   });
 });
+
+describe('drag (grab and throw)', () => {
+  const PE = typeof window.PointerEvent === 'function' ? window.PointerEvent : window.MouseEvent;
+  const pev = (type, x, y) => new PE(type, { clientX: x, clientY: y, button: 0, bubbles: true });
+
+  function drag(card, from, to) {
+    card.dispatchEvent(pev('pointerdown', from[0], from[1]));
+    window.dispatchEvent(pev('pointermove', to[0], to[1]));
+    window.dispatchEvent(pev('pointerup', to[0], to[1]));
+  }
+
+  it('reflects the option as data-fg-drag and defaults to fling', () => {
+    const h = createFolderGallery(root, { items: ITEMS });
+    expect(root.getAttribute('data-fg-drag')).toBe('fling');
+    h.destroy();
+    createFolderGallery(root, { items: ITEMS, drag: 'off' });
+    expect(root.getAttribute('data-fg-drag')).toBe('off');
+  });
+
+  it('a fling past the distance threshold advances', async () => {
+    const h = createFolderGallery(root, { items: ITEMS });
+    const card = root.querySelector('.fg-card.is-active');
+    drag(card, [200, 200], [40, 200]); // 160px left
+    await new Promise((r) => setTimeout(r, 300));
+    expect(h.getActiveIndex()).toBe(1);
+  });
+
+  it('a short drag springs back without advancing', async () => {
+    const h = createFolderGallery(root, { items: ITEMS });
+    const card = root.querySelector('.fg-card.is-active');
+    const base = card.style.transform;
+    // dispatch move/up on separate ticks so the velocity sample decays
+    card.dispatchEvent(pev('pointerdown', 200, 200));
+    window.dispatchEvent(pev('pointermove', 230, 200));
+    await new Promise((r) => setTimeout(r, 50));
+    window.dispatchEvent(pev('pointermove', 230, 200));
+    window.dispatchEvent(pev('pointerup', 230, 200));
+    await new Promise((r) => setTimeout(r, 300));
+    expect(h.getActiveIndex()).toBe(0);
+    expect(card.style.transform).toBe(base);
+  });
+
+  it('a real drag suppresses the click that follows, a tap does not', async () => {
+    const onSelect = vi.fn();
+    createFolderGallery(root, { items: ITEMS, onSelect });
+    const card = root.querySelector('.fg-card.is-active');
+    card.dispatchEvent(pev('pointerdown', 200, 200));
+    window.dispatchEvent(pev('pointermove', 230, 200));
+    await new Promise((r) => setTimeout(r, 50));
+    window.dispatchEvent(pev('pointermove', 230, 200));
+    window.dispatchEvent(pev('pointerup', 230, 200));
+    card.click();
+    expect(onSelect).not.toHaveBeenCalled(); // drag ate this click
+    card.dispatchEvent(pev('pointerdown', 200, 200));
+    window.dispatchEvent(pev('pointerup', 200, 200));
+    card.click();
+    expect(onSelect).toHaveBeenCalledTimes(1); // tap selects normally
+  });
+
+  it('does not advance past the end when loop is off', async () => {
+    const h = createFolderGallery(root, { items: ITEMS, loop: false });
+    const card = root.querySelector('.fg-card.is-active');
+    drag(card, [40, 200], [200, 200]); // fling right = previous, blocked at 0
+    await new Promise((r) => setTimeout(r, 300));
+    expect(h.getActiveIndex()).toBe(0);
+  });
+
+  it('drag: off wires nothing', async () => {
+    const h = createFolderGallery(root, { items: ITEMS, drag: 'off' });
+    const card = root.querySelector('.fg-card.is-active');
+    drag(card, [200, 200], [40, 200]);
+    await new Promise((r) => setTimeout(r, 300));
+    expect(h.getActiveIndex()).toBe(0);
+    expect(card.classList.contains('fg-card--dragging')).toBe(false);
+  });
+});
