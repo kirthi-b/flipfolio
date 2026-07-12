@@ -10,6 +10,7 @@ const SHOTS = [
   { file: 'modes.html', out: 'modes.png', w: 2100, h: 860 },
   { file: 'any-content.html', out: 'any-content.png', w: 1760, h: 820 },
   { file: 'customize.html', out: 'customize.png', w: 1760, h: 820 },
+  { file: 'throw.html', out: 'throw.png', w: 1600, h: 900 },
 ];
 
 mkdirSync('assets/showcase', { recursive: true });

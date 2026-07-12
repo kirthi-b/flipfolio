@@ -77,6 +77,9 @@ Folders hold your actual content. These are live project images, loaded with `it
 ![The same five folders laid out as a stack, a grid, and a carousel](assets/showcase/modes.png)
 One items array, three layouts. `setMode()` animates between them at runtime.
 
+![The front folder flung up off the pile with a grab cursor, the next folder revealed behind it](assets/showcase/throw.png)
+Grab the front folder and throw it. Stack mode, `drag: 'fling'`; a short drag springs back.
+
 ![Four folders holding a photo, a text document, an SVG chart, and a custom-rendered card](assets/showcase/any-content.png)
 Interiors take images, markup, DOM nodes, or a `contentRenderer` for anything else.
 

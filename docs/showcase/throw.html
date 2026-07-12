@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>showcase: grab and throw</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;600&family=Fragment+Mono&family=Hanken+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../src/folder-gallery.css">
+  <style>
+    /* System shell shared with docs/mockup.html. This poster freezes a throw
+       mid-flight: the front folder tilts off the pile with a grab cursor, so
+       the still reads as an intentional gesture, not a glitch. */
+    * { box-sizing: border-box; margin: 0; }
+    html, body { width: 1600px; height: 900px; overflow: hidden; }
+    body {
+      background: #F0F4F2;
+      color: rgba(0, 0, 0, 0.85);
+      font: 16px/1.5 'Hanken Grotesk', ui-sans-serif, system-ui, sans-serif;
+      position: relative;
+    }
+    .mesh {
+      position: absolute; inset: -15%;
+      background:
+        radial-gradient(44% 58% at 14% 18%, rgba(126, 202, 202, 0.55), transparent 70%),
+        radial-gradient(40% 52% at 86% 14%, rgba(46, 106, 92, 0.26), transparent 70%),
+        radial-gradient(48% 62% at 82% 86%, rgba(179, 232, 232, 0.5), transparent 70%),
+        radial-gradient(42% 56% at 16% 88%, rgba(20, 69, 60, 0.15), transparent 70%),
+        radial-gradient(60% 70% at 50% 50%, #F0F4F2, #E4ECE8);
+      filter: blur(60px) saturate(1.02);
+    }
+    .sheet {
+      position: absolute; inset: 40px 44px;
+      background: rgba(240, 244, 242, 0.55);
+      backdrop-filter: blur(24px) saturate(1.1);
+      -webkit-backdrop-filter: blur(24px) saturate(1.1);
+      border: 1px solid rgba(18, 40, 30, 0.22);
+      box-shadow: 0 24px 60px rgba(18, 40, 30, 0.14);
+      display: flex;
+      align-items: center;
+      overflow: hidden;
+    }
+    .sheet::before {
+      content: '';
+      position: absolute; inset: 0;
+      background-image: radial-gradient(rgba(18, 40, 30, 0.10) 1px, transparent 1px);
+      background-size: 22px 22px;
+      pointer-events: none;
+    }
+    .rail { flex: 0 0 440px; padding-left: 68px; position: relative; z-index: 2; }
+    h2 {
+      font-family: 'Unbounded', sans-serif;
+      font-size: 46px; font-weight: 600; letter-spacing: -0.01em; line-height: 1.08;
+      margin-bottom: 18px;
+    }
+    h2 b { color: #14453C; }
+    .rail p { font-size: 19px; line-height: 1.5; color: rgba(0, 0, 0, 0.7); max-width: 26ch; }
+    .rail code {
+      display: inline-block; margin-top: 22px;
+      font: 14px/1.6 'Fragment Mono', monospace;
+      background: rgba(18, 40, 30, 0.06);
+      border: 1px solid rgba(18, 40, 30, 0.18);
+      padding: 12px 16px;
+      color: rgba(0, 0, 0, 0.7); text-align: left;
+    }
+    .stage { flex: 1; position: relative; z-index: 2; height: 100%; }
+    .stage .fg-root { --fg-transition-transform: 1ms; --fg-transition-fade: 1ms; }
+    .stage .fg-dots { display: none; }
+    /* Freeze the front folder mid-throw: lifted toward the viewer, tilted,
+       carried up and to the right along a fling vector. */
+    .stage .fg-card.is-active {
+      transform: translate3d(210px, -150px, 60px) rotate(15deg) scale(1) !important;
+      transition: none !important;
+    }
+    /* grab-hand cursor, sitting on the thrown folder */
+    .cursor {
+      position: absolute; z-index: 6;
+      right: 150px; top: 210px;
+      width: 40px; height: 40px;
+      filter: drop-shadow(0 2px 3px rgba(0,0,0,.3));
+    }
+  </style>
+</head>
+<body>
+  <div class="mesh"></div>
+  <div class="sheet">
+    <div class="rail">
+      <h2>Grab and<br>throw it<b>.</b></h2>
+      <p>In stack mode, grab the front folder and fling it. The pile answers instantly; a short drag springs back.</p>
+      <code>createFolderGallery(el,<br>&nbsp;&nbsp;{ drag: 'fling' })</code>
+    </div>
+    <div class="stage">
+      <div id="fg" data-fg-theme="light"></div>
+      <svg class="cursor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M8 12 V6.5 a1.5 1.5 0 0 1 3 0 V11 m0-4.5 a1.5 1.5 0 0 1 3 0 V11 m0-3.5 a1.5 1.5 0 0 1 3 0 V12 m0-2 a1.4 1.4 0 0 1 2.8 0 V15 a6 6 0 0 1-6 6 h-1.6 a6 6 0 0 1-5-2.7 L4.6 14.6 a1.5 1.5 0 0 1 2.5-1.7 L8 14.5" fill="#fff" stroke="#1c1c1a" stroke-width="1.3" stroke-linejoin="round" stroke-linecap="round"/>
+      </svg>
+    </div>
+  </div>
+  <script type="module">
+    import { createFolderGallery } from '../../src/folder-gallery.js';
+    const manila = ['#e8c96a', '#dd8f5e', '#8fb5a3', '#e2cf8f', '#b58fb5'];
+    const cities = ['Tokyo', 'Nairobi', 'São Paulo', 'Copenhagen', 'Mexico City'];
+    createFolderGallery(document.getElementById('fg'), {
+      items: cities.map((t, i) => ({ label: t, color: manila[i] })),
+      mode: 'stack', reducedMotion: 'force', drag: 'off',
+    });
+  </script>
+</body>
+</html>
