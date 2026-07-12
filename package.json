@@ -1,6 +1,6 @@
 {
   "name": "flipfolio",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": false,
   "description": "A framework-agnostic 3D folder gallery for the web. Real content in manila folders, with stack, grid, and carousel modes.",
   "type": "module",

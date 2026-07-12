@@ -11,7 +11,7 @@ Started as a CSS 3D experiment; it now runs the [kirthi.studio](https://kirthi.s
 
 Live demo: [kirthi.studio/demos/flipfolio](https://kirthi.studio/demos/flipfolio/) · Edit it on [StackBlitz](https://stackblitz.com/github/kirthi-b/flipfolio/tree/master/examples/vanilla?file=main.js)
 
-> v0.1.0, an early release.
+> v0.2.0. New this release: grab the active folder and throw it.
 
 ![flipfolio demo: throwing folders off the stack, grid mode, and photo decals](assets/demo.gif)
 
