@@ -467,7 +467,10 @@ export function createFolderGallery(root, options = {}) {
       velX = (e.clientX - lastX) / dt;
       velY = (e.clientY - lastY) / dt;
       lastX = e.clientX; lastY = e.clientY; lastT = now;
-      dragCard.style.transform = `${dragBase} translate(${dragDX}px, ${dragDY}px) rotate(${(dragDX * DRAG_ROT).toFixed(2)}deg)`;
+      // translateZ lifts the grabbed folder clear of every plane in the
+      // pile (tilted tops can poke past the active card's resting depth)
+      // and reads as physically picking it up.
+      dragCard.style.transform = `${dragBase} translate3d(${dragDX}px, ${dragDY}px, 40px) rotate(${(dragDX * DRAG_ROT).toFixed(2)}deg)`;
     });
     const endDrag = () => {
       if (!dragCard) return;
@@ -486,9 +489,19 @@ export function createFolderGallery(root, options = {}) {
       if (reduced) { goTo(target); return; }
       const offX = horizontal ? Math.sign(dragDX) * Math.max(window.innerWidth * 0.7, 480) : dragDX * 3;
       const offY = horizontal ? dragDY * 3 : Math.sign(dragDY) * Math.max(window.innerHeight * 0.7, 480);
-      card.style.transform = `${dragBase} translate(${offX}px, ${offY}px) rotate(${Math.sign(dragDX || 1) * 18}deg)`;
+      card.style.transform = `${dragBase} translate3d(${offX}px, ${offY}px, 40px) rotate(${Math.sign(dragDX || 1) * 18}deg)`;
       card.style.opacity = '0';
-      setTimeout(() => goTo(target), 240); // relayout restores transform and opacity
+      setTimeout(() => {
+        /* The thrown folder joins the back of the pile by TELEPORT, not by
+           flying back across the scene: transitioning from off-screen to
+           the rear slot would drag it through the other folders' 3D planes
+           and slice them visibly on the way. Kill its transition for one
+           frame, relayout, flush, restore. */
+        card.classList.add('fg-card--snap');
+        goTo(target);
+        void card.offsetWidth; // commit the snapped position before transitions return
+        card.classList.remove('fg-card--snap');
+      }, 240);
     };
     on(window, 'pointerup', endDrag);
     on(window, 'pointercancel', endDrag);

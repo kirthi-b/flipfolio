@@ -110,6 +110,10 @@
   transition: none;
   cursor: grabbing;
 }
+/* One-frame teleport for a thrown folder rejoining the back of the pile
+   (see the fling handler): transitioning that move would slide the card
+   through the other folders' planes. */
+.fg-card--snap { transition: none; }
 .fg-card:focus-visible {
   outline: 2px solid var(--fg-dot-active);
   outline-offset: 4px;
