@@ -492,15 +492,25 @@ export function createFolderGallery(root, options = {}) {
       card.style.transform = `${dragBase} translate3d(${offX}px, ${offY}px, 40px) rotate(${Math.sign(dragDX || 1) * 18}deg)`;
       card.style.opacity = '0';
       setTimeout(() => {
-        /* The thrown folder joins the back of the pile by TELEPORT, not by
-           flying back across the scene: transitioning from off-screen to
-           the rear slot would drag it through the other folders' 3D planes
-           and slice them visibly on the way. Kill its transition for one
-           frame, relayout, flush, restore. */
+        /* The thrown folder must NOT transition from off-screen straight to
+           its new slot: that path crosses the other folders' 3D planes and
+           slices them visibly. Instead it re-enters by DROPPING IN from
+           above the pile: snap (transition off) to a staging point 90px
+           over the destination slot at the slot's own depth, then let the
+           transition carry it down. Descending at its final z, it slides
+           in behind the cards in front of it, which is exactly what filing
+           a folder back into a pile looks like. */
         card.classList.add('fg-card--snap');
         goTo(target);
-        void card.offsetWidth; // commit the snapped position before transitions return
-        card.classList.remove('fg-card--snap');
+        void card.offsetWidth;                    // commit the slot layout
+        const slot = card.style.transform;
+        const slotOpacity = card.style.opacity;
+        card.style.transform = `${slot} translate3d(0, -90px, 0)`;
+        card.style.opacity = '0';
+        void card.offsetWidth;                    // commit the staging point
+        card.classList.remove('fg-card--snap');   // transitions back on
+        card.style.transform = slot;              // descend into the pile
+        card.style.opacity = slotOpacity;
       }, 240);
     };
     on(window, 'pointerup', endDrag);
