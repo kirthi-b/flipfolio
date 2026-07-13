@@ -23,7 +23,7 @@ export type DragMode = 'fling' | 'off';
 export interface FolderGalleryOptions {
   items?: FolderItem[];
   mode?: GalleryMode;
-  /** Fills the folder interior. Overrides the built-in polaroid/image preset. */
+  /** Fills the folder interior. Overrides the built-in image/content renderer. */
   contentRenderer?: (card: HTMLElement, item: FolderItem, index: number) => void;
   /** Fired on click/Enter of the active folder. No built-in navigation. */
   onSelect?: (item: FolderItem, index: number) => void;
@@ -39,6 +39,9 @@ export interface FolderGalleryOptions {
   defaultActiveIndex?: number;
   /** aria-label for the listbox. */
   label?: string;
+  /** Pin the grid layout's column count and/or gap (px). Both default to the
+   *  built-in heuristic (2 or 3 columns by scene width and item count, 16px gap). */
+  grid?: { columns?: number; gap?: number };
 }
 
 export interface FolderGalleryHandle {
@@ -54,9 +57,36 @@ export interface FolderGalleryHandle {
   setGradient(index: number, gradient: string | null): void;
   getActiveIndex(): number;
   getMode(): GalleryMode;
+  /** Current peek mode (reads the root's `data-fg-peek`). */
+  getPeek(): PeekMode;
+  /** The hex color folder `index` is painted with, or `undefined` if unset. */
+  getColor(index: number): string | undefined;
+  /** The CSS gradient on folder `index`'s front, or `undefined` if none. */
+  getGradient(index: number): string | undefined;
+  /** A shallow copy of the items the gallery was built with. */
+  getItems(): FolderItem[];
   /** Removes every listener and empties the root element. */
   destroy(): void;
 }
+
+/**
+ * DOM CustomEvents the gallery dispatches on its root element. They bubble, so
+ * a wrapper or ancestor can listen too. Use with `addEventListener` for typed
+ * `event.detail` (augment `HTMLElementEventMap` in your app to wire it up).
+ */
+export interface FolderGalleryEventMap {
+  'fg-select': CustomEvent<{ index: number; item: FolderItem }>;
+  'fg-activechange': CustomEvent<{ index: number; item: FolderItem }>;
+  'fg-modechange': CustomEvent<{ mode: GalleryMode }>;
+  'fg-peekchange': CustomEvent<{ peek: PeekMode }>;
+  'fg-flingstart': CustomEvent<{ index: number; direction: 'next' | 'prev' }>;
+  'fg-flingend': CustomEvent<{ index: number; direction: 'next' | 'prev' }>;
+}
+
+/** Preset folder silhouette path strings for the `folderPath` option
+ *  (viewBox `0 0 480 342`): a left tab (default), a mirrored right tab, or a
+ *  tabless tray. */
+export const FOLDER_PATHS: { left: string; right: string; tray: string };
 
 /**
  * Create a 3D folder gallery inside `root`. The gallery builds and owns its

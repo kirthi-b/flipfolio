@@ -91,6 +91,10 @@ export class FolderGalleryElement extends ElementBase {
   setGradient(i, gradient) { this._handle && this._handle.setGradient(i, gradient); }
   getActiveIndex() { return this._handle ? this._handle.getActiveIndex() : -1; }
   getMode() { return this._handle ? this._handle.getMode() : (this.getAttribute('mode') || 'stack'); }
+  getPeek() { return this._handle ? this._handle.getPeek() : (this.getAttribute('peek') || 'hover'); }
+  getColor(i) { return this._handle ? this._handle.getColor(i) : undefined; }
+  getGradient(i) { return this._handle ? this._handle.getGradient(i) : undefined; }
+  getItems() { return this._handle ? this._handle.getItems() : []; }
 }
 
 export function defineFolderGallery(tag = 'folder-gallery') {

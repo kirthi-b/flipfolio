@@ -13,6 +13,10 @@ export declare class FolderGalleryElement extends HTMLElement {
   setGradient(index: number, gradient: string | null): void;
   getActiveIndex(): number;
   getMode(): GalleryMode;
+  getPeek(): PeekMode;
+  getColor(index: number): string | undefined;
+  getGradient(index: number): string | undefined;
+  getItems(): FolderItem[];
 }
 
 /** Registers the <folder-gallery> custom element (default tag: 'folder-gallery'). */
