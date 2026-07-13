@@ -112,6 +112,8 @@ export const FolderGallery = forwardRef(function FolderGallery(props, ref) {
     goTo: (i) => handleRef.current && handleRef.current.goTo(i),
     setMode: (m) => handleRef.current && handleRef.current.setMode(m),
     setPeek: (p) => handleRef.current && handleRef.current.setPeek(p),
+    setColor: (i, hex) => handleRef.current && handleRef.current.setColor(i, hex),
+    setGradient: (i, gradient) => handleRef.current && handleRef.current.setGradient(i, gradient),
     getActiveIndex: () => (handleRef.current ? handleRef.current.getActiveIndex() : -1),
     getMode: () => (handleRef.current ? handleRef.current.getMode() : mode),
   }), [mode]);

@@ -87,6 +87,8 @@ export class FolderGalleryElement extends ElementBase {
   goTo(i) { this._handle && this._handle.goTo(i); }
   setMode(m) { this.setAttribute('mode', m); }
   setPeek(p) { this.setAttribute('peek', p); }
+  setColor(i, hex) { this._handle && this._handle.setColor(i, hex); }
+  setGradient(i, gradient) { this._handle && this._handle.setGradient(i, gradient); }
   getActiveIndex() { return this._handle ? this._handle.getActiveIndex() : -1; }
   getMode() { return this._handle ? this._handle.getMode() : (this.getAttribute('mode') || 'stack'); }
 }

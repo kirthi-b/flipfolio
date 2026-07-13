@@ -9,6 +9,9 @@ export interface FolderItem {
   content?: string | Node;
   /** Image URL printed on the folder's front panel; back and tab keep their color. */
   decal?: string;
+  /** CSS gradient painted across the front panel (e.g. `linear-gradient(...)`),
+   *  over the frosted surface but under the label. */
+  gradient?: string;
   /** Any extra data - passed through to onSelect. */
   [key: string]: unknown;
 }
@@ -44,6 +47,11 @@ export interface FolderGalleryHandle {
   goTo(index: number): void;
   setMode(mode: GalleryMode): void;
   setPeek(peek: PeekMode): void;
+  /** Recolor folder `index` from a single hex; re-derives the full palette
+   *  (back, frosted + solid fronts, auto-contrast label) like build time. */
+  setColor(index: number, hex: string): void;
+  /** Paint (or, with a falsy value, clear) a CSS gradient on folder `index`'s front. */
+  setGradient(index: number, gradient: string | null): void;
   getActiveIndex(): number;
   getMode(): GalleryMode;
   /** Removes every listener and empties the root element. */

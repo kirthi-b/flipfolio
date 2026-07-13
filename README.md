@@ -104,12 +104,21 @@ Per-folder tab colors, tokens for radius and blur, and the silhouette itself is 
 | `defaultActiveIndex` | `number` | `0` | |
 | `label` | `string` | `'Folder gallery'` | `aria-label` for the listbox |
 
-Handle: `next()`, `prev()`, `goTo(i)`, `setMode(m)`, `setPeek(p)`, `getActiveIndex()`, `getMode()`, `destroy()`.
+Handle: `next()`, `prev()`, `goTo(i)`, `setMode(m)`, `setPeek(p)`, `setColor(i, hex)`, `setGradient(i, gradient)`, `getActiveIndex()`, `getMode()`, `destroy()`.
 
 Events (CustomEvent on the root, bubbling): `fg-select`, `fg-activechange`, `fg-modechange`, each with `event.detail`.
 
 ## Content
 Each folder renders what you give it: `item.src` for an image, `item.content` for an HTML string or a DOM node, or a `contentRenderer(card, item, index)` for anything richer. Set `item.decal` to an image URL and the photo prints on the folder's front panel; the back and tab keep their color. Contents slide out of the folder on hover; the `peek` option makes that always-on or turns it off.
+
+## Runtime theming
+Each folder's palette derives from `item.color`; `setColor(index, hex)` re-derives the whole thing (SVG back, frosted + solid fronts, auto-contrast label) at runtime, no rebuild. `item.gradient` paints a CSS gradient across the front over the frosted surface, and `setGradient(index, gradient)` sets or clears it live (pass a falsy value to clear). Together they drive swatch pickers and theme switchers:
+
+```js
+gallery.setColor(0, '#3d2e42');                       // recolor one folder
+gallery.setGradient(0, 'linear-gradient(135deg, #236363, #6FCDCD, #8B7FB8)');
+gallery.setGradient(0, null);                          // back to the flat front
+```
 
 ## Accessibility
 `role="listbox"`/`option`, roving tabindex, arrow-key + Home/End navigation, `aria-live` position announcements, `:focus-visible` rings, and a `prefers-reduced-motion` fallback that drops the 3D tilt.

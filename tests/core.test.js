@@ -230,6 +230,58 @@ describe('decal', () => {
   });
 });
 
+describe('theming (color + gradient)', () => {
+  it('item.gradient paints a front gradient layer and marks the card', () => {
+    createFolderGallery(root, { items: [{ label: 'X', color: '#2a3a3a', gradient: 'linear-gradient(135deg, #236363, #8B7FB8)' }] });
+    const card = root.querySelector('.fg-card');
+    expect(card.classList.contains('fg-card--gradient')).toBe(true);
+    const layer = card.querySelector('.fg-front .fg-gradient');
+    expect(layer).toBeTruthy();
+    expect(layer.style.background).toContain('linear-gradient');
+    expect(layer.getAttribute('aria-hidden')).toBe('true');
+  });
+
+  it('cards without a gradient have no gradient layer', () => {
+    createFolderGallery(root, { items: ITEMS });
+    expect(root.querySelector('.fg-gradient')).toBeFalsy();
+    expect(root.querySelector('.fg-card--gradient')).toBeFalsy();
+  });
+
+  it('build-time color still paints the back fill and front vars', () => {
+    createFolderGallery(root, { items: [{ label: 'X', color: '#2a3a3a' }] });
+    const card = root.querySelector('.fg-card');
+    expect(card.style.getPropertyValue('--fg-folder-bg')).toBe('#2a3a3a');
+    expect(card.querySelector('.fg-folder path').getAttribute('fill').startsWith('rgb(')).toBe(true);
+  });
+
+  it('setColor re-derives a folder\'s palette at runtime', () => {
+    const h = createFolderGallery(root, { items: ITEMS });
+    const card = root.querySelectorAll('.fg-card')[1];
+    h.setColor(1, '#804020');
+    expect(card.style.getPropertyValue('--fg-folder-bg')).toBe('#804020');
+    expect(card.querySelector('.fg-folder path').getAttribute('fill').startsWith('rgb(')).toBe(true);
+    expect(card.style.getPropertyValue('--fg-front')).toContain('rgba(');
+    expect(card.style.getPropertyValue('--fg-label-on-color')).toBeTruthy();
+  });
+
+  it('setColor tolerates out-of-range indices and a missing hex', () => {
+    const h = createFolderGallery(root, { items: ITEMS });
+    expect(() => h.setColor(99, '#fff000')).not.toThrow();
+    expect(() => h.setColor(0)).not.toThrow();
+  });
+
+  it('setGradient adds then clears a front gradient', () => {
+    const h = createFolderGallery(root, { items: ITEMS });
+    const card = root.querySelector('.fg-card');
+    h.setGradient(0, 'linear-gradient(90deg, #000, #fff)');
+    expect(card.querySelector('.fg-gradient')).toBeTruthy();
+    expect(card.classList.contains('fg-card--gradient')).toBe(true);
+    h.setGradient(0, null);
+    expect(card.querySelector('.fg-gradient')).toBeFalsy();
+    expect(card.classList.contains('fg-card--gradient')).toBe(false);
+  });
+});
+
 describe('drag (grab and throw)', () => {
   const PE = typeof window.PointerEvent === 'function' ? window.PointerEvent : window.MouseEvent;
   const pev = (type, x, y) => new PE(type, { clientX: x, clientY: y, button: 0, bubbles: true });

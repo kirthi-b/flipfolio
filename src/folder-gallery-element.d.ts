@@ -9,6 +9,8 @@ export declare class FolderGalleryElement extends HTMLElement {
   goTo(index: number): void;
   setMode(mode: GalleryMode): void;
   setPeek(peek: PeekMode): void;
+  setColor(index: number, hex: string): void;
+  setGradient(index: number, gradient: string | null): void;
   getActiveIndex(): number;
   getMode(): GalleryMode;
 }

@@ -68,6 +68,41 @@ function folderColors(hex) {
   };
 }
 
+/* Paint a folder's whole palette from a single hex: the SVG back, the frosted
+ * and solid front surfaces, and the auto-contrast label color. Shared by the
+ * build-time pass and the runtime setColor() handle method so both derive the
+ * palette identically. */
+function paintFolder(card, hex) {
+  const c = folderColors(hex);
+  card.style.setProperty('--fg-folder-bg', hex);
+  card.style.setProperty('--fg-front', c.front);
+  card.style.setProperty('--fg-front-solid', c.frontSolid);
+  card.style.setProperty('--fg-label-on-color', c.label);
+  const path = card.querySelector('.fg-folder path');
+  if (path) path.setAttribute('fill', c.back);
+}
+
+/* Paint a CSS gradient across the folder's front panel, beneath the label and
+ * any peek contents. A falsy gradient clears it. */
+function paintGradient(card, gradient) {
+  const front = card.querySelector('.fg-front');
+  if (!front) return;
+  let layer = front.querySelector('.fg-gradient');
+  if (!gradient) {
+    if (layer) layer.remove();
+    card.classList.remove('fg-card--gradient');
+    return;
+  }
+  if (!layer) {
+    layer = document.createElement('div');
+    layer.className = 'fg-gradient';
+    layer.setAttribute('aria-hidden', 'true');
+    front.insertBefore(layer, front.firstChild);
+  }
+  layer.style.background = gradient;
+  card.classList.add('fg-card--gradient');
+}
+
 /* Built-in default content renderer. Accepts item.content (a Node or HTML
  * string) or item.src (an image). Consumers pass their own contentRenderer
  * (card, item, index) to hold arbitrary content - that's the whole point. */
@@ -173,13 +208,6 @@ export function createFolderGallery(root, options = {}) {
     card.tabIndex = i === active ? 0 : -1; // roving tabindex
     card.setAttribute('role', 'option');
     card.setAttribute('aria-label', item.label || `Item ${i + 1}`);
-    if (item.color) {
-      const c = folderColors(item.color);
-      card.style.setProperty('--fg-folder-bg', item.color);
-      card.style.setProperty('--fg-front', c.front);
-      card.style.setProperty('--fg-front-solid', c.frontSolid);
-      card.style.setProperty('--fg-label-on-color', c.label);
-    }
 
     const svg = document.createElementNS(SVG_NS, 'svg');
     svg.setAttribute('class', 'fg-folder');
@@ -188,7 +216,7 @@ export function createFolderGallery(root, options = {}) {
     svg.setAttribute('aria-hidden', 'true');
     const path = document.createElementNS(SVG_NS, 'path');
     path.setAttribute('d', opts.folderPath);
-    path.setAttribute('fill', item.color ? folderColors(item.color).back : 'var(--fg-folder-bg)');
+    path.setAttribute('fill', 'var(--fg-folder-bg)');
     svg.appendChild(path);
 
     card.appendChild(svg);
@@ -217,6 +245,11 @@ export function createFolderGallery(root, options = {}) {
       front.appendChild(label);
     }
     card.appendChild(front);
+
+    // Palette + optional gradient front (both derive from item; paintFolder
+    // needs the SVG path in place, so it runs after the folder is assembled).
+    if (item.color) paintFolder(card, item.color);
+    if (item.gradient) paintGradient(card, item.gradient);
 
     scene.appendChild(card);
     return card;
@@ -544,6 +577,8 @@ export function createFolderGallery(root, options = {}) {
     goTo,
     setMode,
     setPeek,
+    setColor: (i, hex) => { const card = cardEls[i]; if (card && hex) paintFolder(card, hex); },
+    setGradient: (i, gradient) => { const card = cardEls[i]; if (card) paintGradient(card, gradient); },
     getActiveIndex: () => active,
     getMode: () => mode,
     destroy: teardown,

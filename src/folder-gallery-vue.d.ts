@@ -24,7 +24,7 @@ export interface FolderGalleryEmits {
 /** The methods exposed via a template ref (`ref="gallery"`). */
 export type FolderGalleryExpose = Pick<
   FolderGalleryHandle,
-  'next' | 'prev' | 'goTo' | 'setMode' | 'setPeek' | 'getActiveIndex' | 'getMode'
+  'next' | 'prev' | 'goTo' | 'setMode' | 'setPeek' | 'setColor' | 'setGradient' | 'getActiveIndex' | 'getMode'
 >;
 
 export declare const FolderGallery: DefineComponent<

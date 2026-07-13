@@ -105,6 +105,8 @@ export const FolderGallery = defineComponent({
       goTo: (i) => handle && handle.goTo(i),
       setMode: (m) => handle && handle.setMode(m),
       setPeek: (p) => handle && handle.setPeek(p),
+      setColor: (i, hex) => handle && handle.setColor(i, hex),
+      setGradient: (i, gradient) => handle && handle.setGradient(i, gradient),
       getActiveIndex: () => (handle ? handle.getActiveIndex() : -1),
       getMode: () => (handle ? handle.getMode() : props.mode),
     });
