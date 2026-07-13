@@ -10,6 +10,9 @@ export interface FolderGalleryProps {
   onSelect?: (item: FolderItem, index: number) => void;
   onActiveChange?: (index: number, item: FolderItem) => void;
   onModeChange?: (mode: GalleryMode) => void;
+  onPeekChange?: (peek: PeekMode) => void;
+  onFlingStart?: (index: number, direction: 'next' | 'prev') => void;
+  onFlingEnd?: (index: number, direction: 'next' | 'prev') => void;
   folderPath?: string;
   loop?: boolean;
   scrollNav?: boolean;

@@ -51,7 +51,7 @@
     "dist"
   ],
   "scripts": {
-    "check": "node --check src/folder-gallery.js && node --check src/folder-gallery-element.js && node --check src/folder-gallery-vue.js",
+    "check": "node --check src/folder-gallery.js && node --check src/folder-gallery-element.js && node --check src/folder-gallery-vue.js && node --check src/folder-gallery-react.js",
     "build": "tsup",
     "test": "vitest run",
     "prepublishOnly": "npm run build",

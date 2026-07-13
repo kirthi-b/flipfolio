@@ -1,8 +1,8 @@
 /* ============================================================================
- * folder-gallery - a framework-agnostic 3D folder gallery (core, v0.1.0, WIP)
+ * flipfolio - a framework-agnostic 3D folder gallery (core)
  *
- *   import { createFolderGallery } from 'folder-gallery';
- *   import 'folder-gallery/styles.css';
+ *   import { createFolderGallery } from 'flipfolio';
+ *   import 'flipfolio/styles.css';
  *
  *   const gallery = createFolderGallery(rootEl, {
  *     items: [{ label, color, src }, ...],   // or { content: Node | html }
@@ -23,6 +23,20 @@ const DEFAULT_FOLDER_PATH =
   'L 458 32 C 470 32 480 42 480 54 L 480 320 C 480 332 470 342 458 342 ' +
   'L 22 342 C 10 342 0 332 0 320 Z';
 
+/* A right-side tab is the default mirrored across the viewBox midline; a tabless
+ * tray drops the tab notch entirely. Consumers pass one as `folderPath` instead
+ * of hand-authoring an SVG path. The default (left tab) stays FOLDER_PATHS.left. */
+export const FOLDER_PATHS = {
+  left: DEFAULT_FOLDER_PATH,
+  right:
+    'M 480 22 C 480 10 470 0 458 0 L 325 0 C 312 0 308 6 304 14 C 300 24 292 32 276 32 ' +
+    'L 22 32 C 10 32 0 42 0 54 L 0 320 C 0 332 10 342 22 342 ' +
+    'L 458 342 C 470 342 480 332 480 320 Z',
+  tray:
+    'M 0 22 C 0 10 10 0 22 0 L 458 0 C 470 0 480 10 480 22 L 480 320 ' +
+    'C 480 332 470 342 458 342 L 22 342 C 10 342 0 332 0 320 Z',
+};
+
 const DEFAULTS = {
   mode: 'stack',           // 'stack' | 'grid' | 'carousel'
   folderPath: DEFAULT_FOLDER_PATH,
@@ -38,12 +52,21 @@ const DEFAULTS = {
 const PEEK_MODES = new Set(['hover', 'always', 'off']);
 const DRAG_MODES = new Set(['fling', 'off']);
 
+/* Track the live instance per root so re-initializing the same element tears the
+ * previous one down first (its window/document listeners are otherwise
+ * unreachable and would leak, plus its DOM would be duplicated). */
+const INSTANCES = new WeakMap();
+
 const MODE_WIDTHS = { stack: 480, grid: 720, carousel: 720 };
 const SCROLL_THRESHOLD = 30;
 const SCROLL_COOLDOWN = { stack: 450, carousel: 300 };
 
+/* Parse #rgb or #rrggbb (with or without the hash) to [r,g,b]. Returns null for
+ * anything else so callers can no-op instead of painting rgb(NaN,...) surfaces. */
 function hexToRgb(hex) {
-  const h = String(hex).replace('#', '');
+  let h = String(hex).trim().replace(/^#/, '');
+  if (h.length === 3) h = h.replace(/./g, (c) => c + c);
+  if (!/^[0-9a-f]{6}$/i.test(h)) return null;
   return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
 }
 /* Derive the folder's three surfaces from one base color (same offsets as the
@@ -53,7 +76,9 @@ function hexToRgb(hex) {
  * color (white or ink) by the frontSolid surface's YIQ brightness, so a
  * dark folder color doesn't leave the label unreadable regardless of theme. */
 function folderColors(hex) {
-  const [r, g, b] = hexToRgb(hex);
+  const rgb = hexToRgb(hex);
+  if (!rgb) return null;
+  const [r, g, b] = rgb;
   const dn = (v) => Math.max(v - 30, 0);
   const up = (v, o) => Math.min(v + o, 255);
   const fr = up(r, 35);
@@ -66,6 +91,42 @@ function folderColors(hex) {
     frontSolid: `rgb(${fr},${fg},${fb})`,
     label: yiq >= 128 ? '#1c1c1a' : '#ffffff',
   };
+}
+
+/* Paint a folder's whole palette from a single hex: the SVG back, the frosted
+ * and solid front surfaces, and the auto-contrast label color. Shared by the
+ * build-time pass and the runtime setColor() handle method so both derive the
+ * palette identically. */
+function paintFolder(card, hex) {
+  const c = folderColors(hex);
+  if (!c) return; // ignore a malformed color rather than paint rgb(NaN,...)
+  card.style.setProperty('--fg-folder-bg', hex);
+  card.style.setProperty('--fg-front', c.front);
+  card.style.setProperty('--fg-front-solid', c.frontSolid);
+  card.style.setProperty('--fg-label-on-color', c.label);
+  const path = card.querySelector('.fg-folder path');
+  if (path) path.setAttribute('fill', c.back);
+}
+
+/* Paint a CSS gradient across the folder's front panel, beneath the label and
+ * any peek contents. A falsy gradient clears it. */
+function paintGradient(card, gradient) {
+  const front = card.querySelector('.fg-front');
+  if (!front) return;
+  let layer = front.querySelector('.fg-gradient');
+  if (!gradient) {
+    if (layer) layer.remove();
+    card.classList.remove('fg-card--gradient');
+    return;
+  }
+  if (!layer) {
+    layer = document.createElement('div');
+    layer.className = 'fg-gradient';
+    layer.setAttribute('aria-hidden', 'true');
+    front.insertBefore(layer, front.firstChild);
+  }
+  layer.style.background = gradient;
+  card.classList.add('fg-card--gradient');
 }
 
 /* Built-in default content renderer. Accepts item.content (a Node or HTML
@@ -93,19 +154,29 @@ function defaultContentRenderer(card, item /* , index */) {
 }
 
 export function createFolderGallery(root, options = {}) {
-  if (!root || !root.nodeType) throw new Error('createFolderGallery: a root element is required');
+  if (!root || root.nodeType !== 1) throw new Error('createFolderGallery: a root element is required');
 
-  const opts = { ...DEFAULTS, ...options };
+  // Re-init on the same root: tear the old instance down so it can't leak.
+  const prior = INSTANCES.get(root);
+  if (prior) prior();
+
+  // Drop undefined values before merging: a wrapper passing an unset prop
+  // (loop, scrollNav, ...) as `undefined` must NOT clobber the real default.
+  const provided = {};
+  for (const k in options) if (options[k] !== undefined) provided[k] = options[k];
+  const opts = { ...DEFAULTS, ...provided };
   const items = Array.isArray(opts.items) ? opts.items : [];
   const n = items.length;
   const renderContent =
     typeof opts.contentRenderer === 'function' ? opts.contentRenderer : defaultContentRenderer;
 
-  const reduced =
-    opts.reducedMotion === 'force' ||
-    (opts.reducedMotion !== 'off' &&
-      typeof matchMedia === 'function' &&
-      matchMedia('(prefers-reduced-motion: reduce)').matches);
+  const reducedQuery =
+    opts.reducedMotion === 'auto' && typeof matchMedia === 'function'
+      ? matchMedia('(prefers-reduced-motion: reduce)')
+      : null;
+  // `let` so an OS reduced-motion toggle after init re-syncs the JS motion
+  // branches (fling short-circuit, stack tilt) with the CSS, which updates live.
+  let reduced = opts.reducedMotion === 'force' || (reducedQuery ? reducedQuery.matches : false);
 
   let mode = MODE_WIDTHS[opts.mode] ? opts.mode : 'stack';
   let active = Math.min(Math.max(opts.defaultActiveIndex | 0, 0), Math.max(n - 1, 0));
@@ -116,6 +187,14 @@ export function createFolderGallery(root, options = {}) {
   const cleanups = [];
   const on = (el, ev, fn, o) => { el.addEventListener(ev, fn, o); cleanups.push(() => el.removeEventListener(ev, fn, o)); };
   const emit = (name, detail) => root.dispatchEvent(new CustomEvent(name, { detail, bubbles: true }));
+  let destroyed = false;
+
+  // Tracked timers/frames so teardown() can cancel anything the fling
+  // choreography or the resize debounce has in flight (they mutate layout).
+  const timers = new Set();
+  const rafs = new Set();
+  const later = (fn, ms) => { const id = setTimeout(() => { timers.delete(id); fn(); }, ms); timers.add(id); return id; };
+  const frame = (fn) => { const id = requestAnimationFrame(() => { rafs.delete(id); fn(); }); rafs.add(id); return id; };
 
   /* ── Build own DOM (no page scaffold assumed) ── */
   root.classList.add('fg-root');
@@ -137,6 +216,10 @@ export function createFolderGallery(root, options = {}) {
   root.append(scene, dotsEl, live);
 
   function teardown() {
+    if (destroyed) return;
+    destroyed = true;
+    timers.forEach(clearTimeout); timers.clear();
+    rafs.forEach(cancelAnimationFrame); rafs.clear();
     cleanups.forEach((fn) => fn());
     cleanups.length = 0;
     root.replaceChildren();
@@ -144,10 +227,22 @@ export function createFolderGallery(root, options = {}) {
     root.removeAttribute('data-fg-mode');
     root.removeAttribute('data-fg-peek');
     root.removeAttribute('data-fg-drag');
+    INSTANCES.delete(root);
   }
 
   if (n === 0) {
-    return { next() {}, prev() {}, goTo() {}, setMode() {}, setPeek() {}, getActiveIndex: () => -1, getMode: () => mode, destroy: teardown };
+    // Full no-op surface so an empty gallery matches the handle type: calling
+    // any method (setColor, getItems, ...) is safe rather than a TypeError.
+    const noop = () => {};
+    INSTANCES.set(root, teardown);
+    return {
+      next: noop, prev: noop, goTo: noop, setMode: noop, setPeek: noop,
+      setColor: noop, setGradient: noop,
+      getActiveIndex: () => -1, getMode: () => mode,
+      getPeek: () => root.getAttribute('data-fg-peek'),
+      getColor: () => undefined, getGradient: () => undefined, getItems: () => [],
+      destroy: teardown,
+    };
   }
 
   /* ── Normalized transform - identical function list for every mode ── */
@@ -160,7 +255,7 @@ export function createFolderGallery(root, options = {}) {
       card.style.transform = `translate3d(${x}px,${y}px,${z}px) rotateX(${rx}deg) rotateY(${ry}deg) scale(${s})`;
       card.style.opacity = String(opacity);
     }
-    card.style.transformOrigin = 'center bottom';
+    // transform-origin: center bottom is set once in CSS on .fg-card.
     card.style.zIndex = String(zIndex);
     card.setAttribute('aria-selected', isActive ? 'true' : 'false');
     card.classList.toggle('is-active', isActive);
@@ -173,13 +268,9 @@ export function createFolderGallery(root, options = {}) {
     card.tabIndex = i === active ? 0 : -1; // roving tabindex
     card.setAttribute('role', 'option');
     card.setAttribute('aria-label', item.label || `Item ${i + 1}`);
-    if (item.color) {
-      const c = folderColors(item.color);
-      card.style.setProperty('--fg-folder-bg', item.color);
-      card.style.setProperty('--fg-front', c.front);
-      card.style.setProperty('--fg-front-solid', c.frontSolid);
-      card.style.setProperty('--fg-label-on-color', c.label);
-    }
+    card.setAttribute('aria-setsize', String(n));
+    card.setAttribute('aria-posinset', String(i + 1));
+    card.setAttribute('data-fg-index', String(i)); // lets consumers target one folder in CSS/JS
 
     const svg = document.createElementNS(SVG_NS, 'svg');
     svg.setAttribute('class', 'fg-folder');
@@ -188,7 +279,7 @@ export function createFolderGallery(root, options = {}) {
     svg.setAttribute('aria-hidden', 'true');
     const path = document.createElementNS(SVG_NS, 'path');
     path.setAttribute('d', opts.folderPath);
-    path.setAttribute('fill', item.color ? folderColors(item.color).back : 'var(--fg-folder-bg)');
+    path.setAttribute('fill', 'var(--fg-folder-bg)');
     svg.appendChild(path);
 
     card.appendChild(svg);
@@ -218,6 +309,11 @@ export function createFolderGallery(root, options = {}) {
     }
     card.appendChild(front);
 
+    // Palette + optional gradient front (both derive from item; paintFolder
+    // needs the SVG path in place, so it runs after the folder is assembled).
+    if (item.color) paintFolder(card, item.color);
+    if (item.gradient) paintGradient(card, item.gradient);
+
     scene.appendChild(card);
     return card;
   });
@@ -235,9 +331,15 @@ export function createFolderGallery(root, options = {}) {
   });
 
   /* ── Layouts ── */
+  // Grid renders each folder at its true cell width (not a full-scene card
+  // scaled down), so absolute-unit content stays crisp and legible. Stack and
+  // carousel use the full scene width, so they clear any grid width first.
+  const clearGridWidth = (card) => { if (card.style.width) card.style.width = ''; };
+
   function layoutStack() {
     scene.style.height = '';
     cardEls.forEach((card, i) => {
+      clearGridWidth(card);
       const behind = (i - active + n) % n;
       if (behind === 0) {
         setCardTransform(card, { x: 0, y: 100, z: 20, rx: 0, ry: 0, s: 1, zIndex: n + 1, opacity: 1, isActive: true });
@@ -253,34 +355,35 @@ export function createFolderGallery(root, options = {}) {
   }
   function layoutGrid() {
     const sceneW = scene.clientWidth || MODE_WIDTHS.grid;
-    // Two columns on narrow scenes so folders stay tappable and readable.
-    const cols = sceneW < 520 ? 2 : n <= 4 ? 2 : 3;
-    const gap = 16;
-    const cardW = sceneW;
-    const cardH = sceneW * (2 / 3);
-    const sc = (sceneW - (cols - 1) * gap) / (cols * cardW);
-    const scaledW = cardW * sc;
-    const scaledH = cardH * sc;
-    const tabScaled = 22 * sc;
+    const gap = Number.isFinite(opts.grid && opts.grid.gap) ? opts.grid.gap : 16;
+    // A pinned column count wins; otherwise two columns on narrow scenes (so
+    // folders stay tappable) or for small sets, three otherwise.
+    const cols = Math.max(1, Math.round(
+      opts.grid && opts.grid.columns ? opts.grid.columns : sceneW < 520 ? 2 : n <= 4 ? 2 : 3
+    ));
+    // Each card is sized to its cell and rendered at scale 1 (no shrink-to-blur),
+    // so the folder art and any content inside read at their true size.
+    const cellW = (sceneW - (cols - 1) * gap) / cols;
+    const cellH = cellW * (2 / 3);
     const rows = Math.ceil(n / cols);
     cardEls.forEach((card, i) => {
       const col = i % cols;
       const row = Math.floor(i / cols);
       const itemsInRow = Math.min(cols, n - row * cols);
-      const rowW = itemsInRow * scaledW + (itemsInRow - 1) * gap;
+      const rowW = itemsInRow * cellW + (itemsInRow - 1) * gap;
       const rowStartX = (sceneW - rowW) / 2;
-      const cellLeft = rowStartX + col * (scaledW + gap);
-      const cellTop = row * (scaledH + tabScaled + gap) + tabScaled;
-      const tx = cellLeft + scaledW / 2 - cardW / 2;
-      const ty = cellTop + scaledH - cardH;
-      setCardTransform(card, { x: tx, y: ty, z: 0, rx: 0, ry: 0, s: sc, zIndex: i === active ? 2 : 1, opacity: 1, isActive: i === active });
+      const x = rowStartX + col * (cellW + gap);
+      const y = row * (cellH + gap);
+      card.style.width = cellW + 'px';
+      setCardTransform(card, { x, y, z: 0, rx: 0, ry: 0, s: 1, zIndex: i === active ? 2 : 1, opacity: 1, isActive: i === active });
     });
-    scene.style.height = rows * (scaledH + tabScaled + gap) + 20 + 'px';
+    scene.style.height = rows * cellH + (rows - 1) * gap + 'px';
   }
   function layoutCarousel() {
     const sceneW = scene.clientWidth || MODE_WIDTHS.carousel;
     const cardW = sceneW;
     const cardH = cardW * (2 / 3);
+    cardEls.forEach(clearGridWidth);
     const activeSc = 0.62;
     const activeW = cardW * activeSc;
     const sceneH = Math.max(cardH * activeSc + 40, 180);
@@ -318,26 +421,32 @@ export function createFolderGallery(root, options = {}) {
 
   /* ── Navigation ── */
   function goTo(i) {
-    const next = opts.loop ? ((i % n) + n) % n : Math.min(Math.max(i, 0), n - 1);
+    if (destroyed) return;
+    // Coerce first: an unvalidated NaN/undefined would set active to NaN and
+    // blank every card (translate3d(NaNpx,...)) plus emit index: NaN.
+    const t = Number.isFinite(+i) ? Math.trunc(+i) : active;
+    const next = opts.loop ? ((t % n) + n) % n : Math.min(Math.max(t, 0), n - 1);
     if (next === active) return;
     active = next;
     applyLayout();
     emit('fg-activechange', { index: active, item: items[active] });
   }
   function select(i) {
+    if (destroyed) return;
     emit('fg-select', { index: i, item: items[i] });
     if (typeof opts.onSelect === 'function') opts.onSelect(items[i], i);
   }
   function setMode(m) {
-    if (m === mode || !MODE_WIDTHS[m]) return;
+    if (destroyed || m === mode || !MODE_WIDTHS[m]) return;
     mode = m;
     root.setAttribute('data-fg-mode', mode);
     applyLayout();
     emit('fg-modechange', { mode });
   }
   function setPeek(p) {
-    if (!PEEK_MODES.has(p)) return;
+    if (destroyed || !PEEK_MODES.has(p) || p === root.getAttribute('data-fg-peek')) return;
     root.setAttribute('data-fg-peek', p);
+    emit('fg-peekchange', { peek: p });
   }
 
   /* ── Interaction ── */
@@ -402,7 +511,7 @@ export function createFolderGallery(root, options = {}) {
         scrollAccum = 0;
         scrollCooldown = true;
         goTo(active + dir);
-        setTimeout(() => { scrollCooldown = false; scrollAccum = 0; }, SCROLL_COOLDOWN[mode] || 300);
+        later(() => { scrollCooldown = false; scrollAccum = 0; }, SCROLL_COOLDOWN[mode] || 300);
       }
     }, { passive: false });
   }
@@ -492,7 +601,9 @@ export function createFolderGallery(root, options = {}) {
       const target = active + dir;
       const blocked = !opts.loop && (target < 0 || target > n - 1);
       if (!flung || blocked) { card.style.transform = dragBase; return; } // spring back into the pile
-      if (reduced) { goTo(target); return; }
+      const semantic = dir > 0 ? 'next' : 'prev';
+      emit('fg-flingstart', { index: active, direction: semantic });
+      if (reduced) { goTo(target); emit('fg-flingend', { index: target, direction: semantic }); return; }
       const offX = horizontal ? Math.sign(dragDX) * Math.max(window.innerWidth * 0.7, 480) : dragDX * 3;
       const offY = horizontal ? dragDY * 3 : Math.sign(dragDY) * Math.max(window.innerHeight * 0.7, 480);
       /* Choreography: the pile answers the throw IMMEDIATELY (goTo below;
@@ -505,7 +616,7 @@ export function createFolderGallery(root, options = {}) {
       card.style.transform = `${dragBase} translate3d(${offX}px, ${offY}px, 40px) rotate(${Math.sign(dragDX || 1) * 18}deg)`;
       card.style.opacity = '0';
       goTo(target); // shuffle starts now; the flung card is exempt from this relayout
-      setTimeout(() => {
+      later(() => {
         card.classList.add('fg-card--snap');
         card.classList.remove('fg-card--flung');
         applyLayout(); // now it takes its slot transform (invisible, transitions off)
@@ -519,12 +630,15 @@ export function createFolderGallery(root, options = {}) {
            fling-off position), which flashes the card across the pile.
            Painting one real frame at the staging point (invisible,
            transitions off) gives every engine the same before-state. */
-        requestAnimationFrame(() => requestAnimationFrame(() => {
+        frame(() => frame(() => {
           card.classList.remove('fg-card--snap');
           card.classList.add('fg-card--entering'); // quicker settle curve for the drop
           card.style.transform = slot;             // descend into the pile
           card.style.opacity = slotOpacity;
-          setTimeout(() => card.classList.remove('fg-card--entering'), 700);
+          later(() => {
+            card.classList.remove('fg-card--entering');
+            emit('fg-flingend', { index: target, direction: semantic });
+          }, 700);
         }));
       }, 400); // after the 340ms flung fade, with margin: never snap a visible card
     };
@@ -533,21 +647,38 @@ export function createFolderGallery(root, options = {}) {
   }
 
   let resizeTimer;
-  on(window, 'resize', () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(applyLayout, 150); });
+  on(window, 'resize', () => { clearTimeout(resizeTimer); resizeTimer = later(applyLayout, 150); });
+
+  // Keep `reduced` in sync if the OS setting changes while mounted (the CSS
+  // updates live; this re-runs the JS motion branches to match).
+  if (reducedQuery && reducedQuery.addEventListener) {
+    on(reducedQuery, 'change', (e) => { if (!destroyed) { reduced = e.matches; applyLayout(); } });
+  }
 
   applyLayout();
 
   /* ── Public handle ── */
-  return {
+  const handle = {
     next: () => goTo(active + 1),
     prev: () => goTo(active - 1),
     goTo,
     setMode,
     setPeek,
+    setColor: (i, hex) => { const card = cardEls[i]; if (card && !destroyed) paintFolder(card, hex); },
+    setGradient: (i, gradient) => { const card = cardEls[i]; if (card && !destroyed) paintGradient(card, gradient); },
     getActiveIndex: () => active,
     getMode: () => mode,
+    getPeek: () => root.getAttribute('data-fg-peek'),
+    getColor: (i) => { const card = cardEls[i]; return card ? card.style.getPropertyValue('--fg-folder-bg') || undefined : undefined; },
+    getGradient: (i) => {
+      const layer = cardEls[i] && cardEls[i].querySelector('.fg-gradient');
+      return layer ? layer.style.background || undefined : undefined;
+    },
+    getItems: () => items.slice(),
     destroy: teardown,
   };
+  INSTANCES.set(root, teardown);
+  return handle;
 }
 
 export default createFolderGallery;

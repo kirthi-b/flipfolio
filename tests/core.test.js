@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { createFolderGallery } from '../src/folder-gallery.js';
+import { createFolderGallery, FOLDER_PATHS } from '../src/folder-gallery.js';
 
 const ITEMS = [
   { label: 'One', color: '#2a3a3a' },
@@ -230,6 +230,58 @@ describe('decal', () => {
   });
 });
 
+describe('theming (color + gradient)', () => {
+  it('item.gradient paints a front gradient layer and marks the card', () => {
+    createFolderGallery(root, { items: [{ label: 'X', color: '#2a3a3a', gradient: 'linear-gradient(135deg, #236363, #8B7FB8)' }] });
+    const card = root.querySelector('.fg-card');
+    expect(card.classList.contains('fg-card--gradient')).toBe(true);
+    const layer = card.querySelector('.fg-front .fg-gradient');
+    expect(layer).toBeTruthy();
+    expect(layer.style.background).toContain('linear-gradient');
+    expect(layer.getAttribute('aria-hidden')).toBe('true');
+  });
+
+  it('cards without a gradient have no gradient layer', () => {
+    createFolderGallery(root, { items: ITEMS });
+    expect(root.querySelector('.fg-gradient')).toBeFalsy();
+    expect(root.querySelector('.fg-card--gradient')).toBeFalsy();
+  });
+
+  it('build-time color still paints the back fill and front vars', () => {
+    createFolderGallery(root, { items: [{ label: 'X', color: '#2a3a3a' }] });
+    const card = root.querySelector('.fg-card');
+    expect(card.style.getPropertyValue('--fg-folder-bg')).toBe('#2a3a3a');
+    expect(card.querySelector('.fg-folder path').getAttribute('fill').startsWith('rgb(')).toBe(true);
+  });
+
+  it('setColor re-derives a folder\'s palette at runtime', () => {
+    const h = createFolderGallery(root, { items: ITEMS });
+    const card = root.querySelectorAll('.fg-card')[1];
+    h.setColor(1, '#804020');
+    expect(card.style.getPropertyValue('--fg-folder-bg')).toBe('#804020');
+    expect(card.querySelector('.fg-folder path').getAttribute('fill').startsWith('rgb(')).toBe(true);
+    expect(card.style.getPropertyValue('--fg-front')).toContain('rgba(');
+    expect(card.style.getPropertyValue('--fg-label-on-color')).toBeTruthy();
+  });
+
+  it('setColor tolerates out-of-range indices and a missing hex', () => {
+    const h = createFolderGallery(root, { items: ITEMS });
+    expect(() => h.setColor(99, '#fff000')).not.toThrow();
+    expect(() => h.setColor(0)).not.toThrow();
+  });
+
+  it('setGradient adds then clears a front gradient', () => {
+    const h = createFolderGallery(root, { items: ITEMS });
+    const card = root.querySelector('.fg-card');
+    h.setGradient(0, 'linear-gradient(90deg, #000, #fff)');
+    expect(card.querySelector('.fg-gradient')).toBeTruthy();
+    expect(card.classList.contains('fg-card--gradient')).toBe(true);
+    h.setGradient(0, null);
+    expect(card.querySelector('.fg-gradient')).toBeFalsy();
+    expect(card.classList.contains('fg-card--gradient')).toBe(false);
+  });
+});
+
 describe('drag (grab and throw)', () => {
   const PE = typeof window.PointerEvent === 'function' ? window.PointerEvent : window.MouseEvent;
   const pev = (type, x, y) => new PE(type, { clientX: x, clientY: y, button: 0, bubbles: true });
@@ -303,5 +355,263 @@ describe('drag (grab and throw)', () => {
     await new Promise((r) => setTimeout(r, 300));
     expect(h.getActiveIndex()).toBe(0);
     expect(card.classList.contains('fg-card--dragging')).toBe(false);
+  });
+});
+
+describe('robustness: bad goTo input', () => {
+  it('goTo(NaN|undefined|"x") never corrupts active, transforms, or events', () => {
+    const seen = [];
+    const h = createFolderGallery(root, { items: ITEMS });
+    root.addEventListener('fg-activechange', (e) => seen.push(e.detail.index));
+    h.goTo(1); // one legitimate move to a valid index
+    [NaN, undefined, 'x', {}].forEach((bad) => expect(() => h.goTo(bad)).not.toThrow());
+    // active stays the last valid index, still an in-range integer
+    const a = h.getActiveIndex();
+    expect(Number.isInteger(a)).toBe(true);
+    expect(a).toBe(1);
+    // no card carries a NaN transform
+    [...root.querySelectorAll('.fg-card')].forEach((c) => {
+      expect(c.style.transform).not.toContain('NaN');
+    });
+    // only the one valid move emitted, and never with a NaN index
+    expect(seen).toEqual([1]);
+    expect(seen.every((i) => Number.isInteger(i))).toBe(true);
+  });
+});
+
+describe('robustness: empty gallery handle', () => {
+  it('every method is a callable no-op on an empty gallery', () => {
+    const h = createFolderGallery(root, { items: [] });
+    expect(() => {
+      h.setColor(0, '#ffffff');
+      h.setGradient(0, 'linear-gradient(90deg,#000,#fff)');
+      h.getItems();
+      h.getPeek();
+      h.getColor(0);
+      h.getGradient(0);
+      h.next();
+      h.prev();
+      h.goTo(2);
+    }).not.toThrow();
+    expect(h.getItems()).toEqual([]);
+    expect(h.getColor(0)).toBeUndefined();
+    expect(h.getGradient(0)).toBeUndefined();
+    h.destroy();
+  });
+});
+
+describe('robustness: post-destroy inertness', () => {
+  it('goTo/setMode/setPeek/setColor are inert after destroy and add no attributes back', () => {
+    const h = createFolderGallery(root, { items: ITEMS });
+    h.destroy();
+    expect(() => {
+      h.goTo(2);
+      h.setMode('grid');
+      h.setPeek('always');
+      h.setColor(0, '#ffffff');
+      h.setGradient(0, 'linear-gradient(90deg,#000,#fff)');
+    }).not.toThrow();
+    expect(root.getAttribute('data-fg-mode')).toBeNull();
+    expect(root.getAttribute('data-fg-peek')).toBeNull();
+    expect(root.getAttribute('data-fg-drag')).toBeNull();
+    expect(root.children.length).toBe(0);
+  });
+
+  it('destroy is idempotent', () => {
+    const h = createFolderGallery(root, { items: ITEMS });
+    h.destroy();
+    expect(() => h.destroy()).not.toThrow();
+    expect(root.children.length).toBe(0);
+  });
+});
+
+describe('robustness: double init', () => {
+  it('re-initializing a root tears the old instance down (exactly one scene)', () => {
+    const a = createFolderGallery(root, { items: ITEMS });
+    a.next();
+    expect(a.getActiveIndex()).toBe(1);
+    const b = createFolderGallery(root, { items: ITEMS });
+    expect(root.querySelectorAll('.fg-scene').length).toBe(1);
+    expect(root.querySelectorAll('.fg-card').length).toBe(3);
+    // the old handle is now dead; the new one starts fresh
+    expect(b.getActiveIndex()).toBe(0);
+    b.destroy();
+  });
+});
+
+describe('robustness: color parsing', () => {
+  it('setColor accepts 3-digit hex and paints a valid rgb (not NaN)', () => {
+    const h = createFolderGallery(root, { items: ITEMS });
+    const path = () => root.querySelector('.fg-card .fg-folder path').getAttribute('fill');
+    h.setColor(0, '#f00');
+    expect(path().startsWith('rgb(')).toBe(true);
+    expect(path()).not.toContain('NaN');
+  });
+
+  it('an invalid color (red, #zzz) is a no-op, never painting rgb(NaN)', () => {
+    const h = createFolderGallery(root, { items: ITEMS });
+    const card = root.querySelector('.fg-card');
+    h.setColor(0, '#f00');
+    const before = card.querySelector('.fg-folder path').getAttribute('fill');
+    h.setColor(0, 'red');
+    h.setColor(0, '#zzz');
+    const after = card.querySelector('.fg-folder path').getAttribute('fill');
+    expect(after).toBe(before);
+    expect(after).not.toContain('NaN');
+  });
+});
+
+describe('robustness: undefined options keep defaults', () => {
+  it('loop: undefined still loops (default true is not clobbered)', () => {
+    const h = createFolderGallery(root, { items: ITEMS, loop: undefined });
+    h.prev(); // from 0, wraps to last only if loop stayed true
+    expect(h.getActiveIndex()).toBe(2);
+  });
+});
+
+describe('peek accessors', () => {
+  it('getPeek reflects the current peek; setPeek updates it and emits fg-peekchange', () => {
+    const seen = vi.fn();
+    root.addEventListener('fg-peekchange', (e) => seen(e.detail.peek));
+    const h = createFolderGallery(root, { items: ITEMS });
+    expect(h.getPeek()).toBe('hover');
+    h.setPeek('always');
+    expect(h.getPeek()).toBe('always');
+    expect(seen).toHaveBeenCalledWith('always');
+  });
+});
+
+describe('color/gradient/items accessors', () => {
+  it('getColor and getGradient reflect what setColor/setGradient set', () => {
+    const h = createFolderGallery(root, { items: ITEMS });
+    expect(h.getColor(0)).toBe('#2a3a3a'); // build-time color
+    expect(h.getGradient(0)).toBeUndefined();
+    h.setColor(0, '#804020');
+    expect(h.getColor(0)).toBe('#804020');
+    h.setGradient(0, 'linear-gradient(90deg, #000, #fff)');
+    expect(h.getGradient(0)).toContain('linear-gradient');
+  });
+
+  it('getColor/getGradient are undefined when unset', () => {
+    const h = createFolderGallery(root, { items: [{ label: 'Bare' }] });
+    expect(h.getColor(0)).toBeUndefined();
+    expect(h.getGradient(0)).toBeUndefined();
+  });
+
+  it('getItems returns a copy: mutating it does not affect internal state', () => {
+    const h = createFolderGallery(root, { items: ITEMS });
+    const got = h.getItems();
+    expect(got).toEqual(ITEMS);
+    got.push({ label: 'Injected' });
+    got.length = 0; // wipe the returned array
+    expect(h.getItems().length).toBe(3);
+    expect(h.getItems()[0].label).toBe('One');
+  });
+});
+
+describe('fling events', () => {
+  const PE = typeof window.PointerEvent === 'function' ? window.PointerEvent : window.MouseEvent;
+  const pev = (type, x, y) => new PE(type, { clientX: x, clientY: y, button: 0, bubbles: true });
+  function drag(card, from, to) {
+    card.dispatchEvent(pev('pointerdown', from[0], from[1]));
+    window.dispatchEvent(pev('pointermove', to[0], to[1]));
+    window.dispatchEvent(pev('pointerup', to[0], to[1]));
+  }
+
+  // reducedMotion:'force' collapses the async fling choreography so both events
+  // fire synchronously on release - deterministic without waiting out timers.
+  it('a fling emits fg-flingstart then fg-flingend, each with {index, direction}', () => {
+    const events = [];
+    root.addEventListener('fg-flingstart', (e) => events.push(['start', e.detail]));
+    root.addEventListener('fg-flingend', (e) => events.push(['end', e.detail]));
+    const h = createFolderGallery(root, { items: ITEMS, reducedMotion: 'force' });
+    const card = root.querySelector('.fg-card.is-active');
+    drag(card, [200, 200], [40, 200]); // 160px left = next
+    expect(events.map((e) => e[0])).toEqual(['start', 'end']);
+    expect(events[0][1]).toMatchObject({ index: 0, direction: 'next' });
+    expect(events[1][1]).toMatchObject({ index: 1, direction: 'next' });
+    expect(h.getActiveIndex()).toBe(1);
+  });
+});
+
+describe('FOLDER_PATHS', () => {
+  it('exports string left/right/tray paths', () => {
+    expect(typeof FOLDER_PATHS.left).toBe('string');
+    expect(typeof FOLDER_PATHS.right).toBe('string');
+    expect(typeof FOLDER_PATHS.tray).toBe('string');
+  });
+
+  it('folderPath: FOLDER_PATHS.tray renders as the path d attribute', () => {
+    createFolderGallery(root, { items: ITEMS, folderPath: FOLDER_PATHS.tray });
+    const d = root.querySelector('.fg-folder path').getAttribute('d');
+    expect(d).toBe(FOLDER_PATHS.tray);
+  });
+});
+
+describe('grid legibility fix (cell width, no shrink)', () => {
+  it('grid sizes each card via inline px width and does not scale it down', () => {
+    const h = createFolderGallery(root, { items: ITEMS, mode: 'grid' });
+    const card = root.querySelector('.fg-card');
+    expect(card.style.width).toMatch(/px$/);
+    expect(card.style.transform).toContain('scale(1)');
+    expect(card.style.transform).not.toMatch(/scale\(0\./); // no sub-1 shrink
+    // switching back to stack clears the inline width
+    h.setMode('stack');
+    expect(card.style.width).toBe('');
+  });
+
+  it('grid columns:2 lays out two per row (shared row y-offset), no throw', () => {
+    expect(() => createFolderGallery(root, { items: ITEMS, mode: 'grid', grid: { columns: 2 } })).not.toThrow();
+    const cards = [...root.querySelectorAll('.fg-card')];
+    cards.forEach((c) => expect(c.style.width).toMatch(/px$/));
+    const yOf = (c) => c.style.transform.match(/translate3d\([^,]+,\s*([^,]+),/)[1];
+    // cols=2 → cards 0,1 share row 0; card 2 wraps to row 1
+    expect(yOf(cards[0])).toBe(yOf(cards[1]));
+    expect(yOf(cards[2])).not.toBe(yOf(cards[0]));
+  });
+});
+
+describe('carousel mode', () => {
+  it('setMode(carousel) sets data-fg-mode and next/prev navigate', () => {
+    const h = createFolderGallery(root, { items: ITEMS });
+    h.setMode('carousel');
+    expect(root.getAttribute('data-fg-mode')).toBe('carousel');
+    expect(() => { h.next(); h.prev(); }).not.toThrow();
+    h.next();
+    expect(h.getActiveIndex()).toBe(1);
+  });
+});
+
+describe('wheel navigation', () => {
+  const wheel = (dy) => new WheelEvent('wheel', { deltaY: dy, bubbles: true, cancelable: true });
+
+  it('a wheel past the threshold advances, then respects the cooldown', () => {
+    vi.useFakeTimers();
+    try {
+      const h = createFolderGallery(root, { items: ITEMS });
+      root.dispatchEvent(wheel(60)); // > SCROLL_THRESHOLD (30)
+      expect(h.getActiveIndex()).toBe(1);
+      root.dispatchEvent(wheel(60)); // still cooling down: no advance
+      expect(h.getActiveIndex()).toBe(1);
+      vi.advanceTimersByTime(500); // past SCROLL_COOLDOWN.stack (450)
+      root.dispatchEvent(wheel(60));
+      expect(h.getActiveIndex()).toBe(2);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
+describe('touch swipe', () => {
+  it('a dominant-axis swipe on the scene navigates (drag off so touch owns it)', () => {
+    const h = createFolderGallery(root, { items: ITEMS, drag: 'off' });
+    const scene = root.querySelector('.fg-scene');
+    const start = new Event('touchstart', { bubbles: true });
+    start.touches = [{ clientX: 200, clientY: 200 }];
+    scene.dispatchEvent(start);
+    const end = new Event('touchend', { bubbles: true });
+    end.changedTouches = [{ clientX: 100, clientY: 200 }]; // 100px left = next
+    scene.dispatchEvent(end);
+    expect(h.getActiveIndex()).toBe(1);
   });
 });

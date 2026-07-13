@@ -9,8 +9,14 @@ export declare class FolderGalleryElement extends HTMLElement {
   goTo(index: number): void;
   setMode(mode: GalleryMode): void;
   setPeek(peek: PeekMode): void;
+  setColor(index: number, hex: string): void;
+  setGradient(index: number, gradient: string | null): void;
   getActiveIndex(): number;
   getMode(): GalleryMode;
+  getPeek(): PeekMode;
+  getColor(index: number): string | undefined;
+  getGradient(index: number): string | undefined;
+  getItems(): FolderItem[];
 }
 
 /** Registers the <folder-gallery> custom element (default tag: 'folder-gallery'). */

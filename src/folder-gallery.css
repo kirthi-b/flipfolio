@@ -1,4 +1,4 @@
-/* folder-gallery - default stylesheet (v0.1.0, WIP)
+/* flipfolio - default stylesheet
  * Themeable via the custom properties on .fg-root. Light and dark are both
  * first-class: `prefers-color-scheme` picks the default, and an explicit
  * `data-fg-theme="light" | "dark"` on .fg-root always wins.
@@ -12,6 +12,14 @@
   --fg-transition-transform: 700ms;
   --fg-transition-fade: 300ms;
   --fg-active-blur: 12px;
+  --fg-scene-height: 440px;   /* stack canvas height; grid/carousel size in JS */
+  --fg-gap: 1rem;             /* space between the scene and the dots row */
+  /* label typography */
+  --fg-label-size: 0.95rem;
+  --fg-label-weight: 600;
+  --fg-label-tracking: 0.01em;
+  /* gradient front strength (item.gradient / setGradient) */
+  --fg-gradient-opacity: 0.6;
 
   /* ── surface tokens (LIGHT is the base; dark overrides below) ──
      --fg-front / --fg-front-solid are normally set PER CARD by the engine,
@@ -23,6 +31,7 @@
   --fg-dot: #8a8a86;
   --fg-dot-active: #1c1c1a;
   --fg-shadow: 0 12px 32px rgba(30, 30, 30, 0.16), 0 4px 12px rgba(30, 30, 30, 0.08);
+  --fg-folder-shadow: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.22));
   --fg-inset-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.35);
   --fg-inset-highlight-active: inset 0 1px 0 rgba(255, 255, 255, 0.45);
   /* peek: how far contents slide out of the folder */
@@ -32,11 +41,14 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1rem;
+  gap: var(--fg-gap);
 }
 
+/* Dark is the default only when the media query says so AND light isn't forced.
+   Scoping with :not([data-fg-theme='light']) lets the one dark block below
+   serve both "OS dark" and "forced dark", so no light block needs repeating. */
 @media (prefers-color-scheme: dark) {
-  .fg-root {
+  .fg-root:not([data-fg-theme='light']) {
     --fg-folder-bg: #2a3a3a;
     --fg-front: rgba(90, 90, 90, 0.55);
     --fg-front-solid: rgb(115, 115, 115);
@@ -48,18 +60,7 @@
     --fg-inset-highlight-active: inset 0 1px 0 rgba(255, 255, 255, 0.15);
   }
 }
-/* Explicit theme attribute beats the media query in BOTH directions. */
-.fg-root[data-fg-theme='light'] {
-  --fg-folder-bg: #e8c96a;
-  --fg-front: rgba(255, 255, 255, 0.55);
-  --fg-front-solid: rgb(240, 236, 224);
-  --fg-label: #1c1c1a;
-  --fg-dot: #8a8a86;
-  --fg-dot-active: #1c1c1a;
-  --fg-shadow: 0 12px 32px rgba(30, 30, 30, 0.16), 0 4px 12px rgba(30, 30, 30, 0.08);
-  --fg-inset-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.35);
-  --fg-inset-highlight-active: inset 0 1px 0 rgba(255, 255, 255, 0.45);
-}
+/* Forced dark, regardless of OS preference. */
 .fg-root[data-fg-theme='dark'] {
   --fg-folder-bg: #2a3a3a;
   --fg-front: rgba(90, 90, 90, 0.55);
@@ -75,7 +76,7 @@
 .fg-scene {
   position: relative;
   width: min(480px, 92vw); /* JS overrides per mode; this is the stack default */
-  height: 440px;
+  height: var(--fg-scene-height, 440px); /* stack default; grid/carousel set it in JS */
   perspective: var(--fg-perspective);
   transform-style: preserve-3d;
 }
@@ -141,7 +142,7 @@
   inset: 0;
   width: 100%;
   height: 100%;
-  filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.22));
+  filter: var(--fg-folder-shadow, drop-shadow(0 8px 24px rgba(0, 0, 0, 0.22)));
 }
 
 .fg-content {
@@ -215,10 +216,6 @@
   box-shadow: var(--fg-shadow), var(--fg-inset-highlight-active);
 }
 
-/* ── decal: the folder is skinned with an image (item.decal) ──
-   The image is clipped to the silhouette inside the SVG; the front panel
-   becomes a label scrim so the photo shows through and the label stays
-   readable. Overrides both the solid and frosted front treatments. */
 /* ── decal: the photo prints on the folder's front panel ──
    The back and tab keep their color, so the stack still reads as folders.
    The print carries its own lighting: a lip hairline where the front edge
@@ -255,14 +252,27 @@
 }
 .fg-card--decal .fg-label { color: #ffffff; position: relative; z-index: 1; }
 
+/* ── gradient front: item.gradient (or setGradient) paints a CSS gradient
+   across the front panel, over the frosted/solid surface but under the label
+   and any peek contents. The frosted backdrop-filter still reads through. ── */
+.fg-gradient {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  opacity: var(--fg-gradient-opacity, 0.6);
+  pointer-events: none;
+}
+.fg-card--gradient .fg-label { position: relative; z-index: 1; }
+
 .fg-label {
   /* Falls back to the theme label color when the card has no item.color;
      otherwise the engine sets --fg-label-on-color per card so the label
      stays readable against that folder's own front-panel brightness. */
   color: var(--fg-label-on-color, var(--fg-label));
-  font-weight: 600;
-  font-size: 0.95rem;
-  letter-spacing: 0.01em;
+  font-weight: var(--fg-label-weight, 600);
+  font-size: var(--fg-label-size, 0.95rem);
+  letter-spacing: var(--fg-label-tracking, 0.01em);
 }
 
 .fg-dots { display: flex; gap: 0.5rem; }
