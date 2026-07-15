@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, beforeEach } from 'vitest';
+import { describe, it, expect, beforeAll, beforeEach, vi } from 'vitest';
 import { defineFolderGallery } from '../src/folder-gallery-element.js';
 
 const ITEMS = [
@@ -30,6 +30,14 @@ describe('<folder-gallery> custom element', () => {
       `<folder-gallery items='[{"label":"A"},{"label":"B"},{"label":"C"}]'></folder-gallery>`;
     const el = document.body.querySelector('folder-gallery');
     expect(el.querySelectorAll('.fg-card').length).toBe(3);
+  });
+
+  it('warns instead of silently swallowing malformed items JSON', () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    document.body.innerHTML = `<folder-gallery items='not valid json'></folder-gallery>`;
+    expect(warnSpy).toHaveBeenCalledTimes(1);
+    expect(warnSpy.mock.calls[0][0]).toMatch(/malformed items attribute/);
+    warnSpy.mockRestore();
   });
 
   it('mode attribute drives the core without a rebuild', () => {
