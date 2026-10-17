@@ -358,8 +358,11 @@ export function createFolderGallery(root, options = {}) {
     const gap = Number.isFinite(opts.grid && opts.grid.gap) ? opts.grid.gap : 16;
     // A pinned column count wins; otherwise two columns on narrow scenes (so
     // folders stay tappable) or for small sets, three otherwise.
+    // A non-finite pin (NaN, Infinity, a non-numeric string) would make every
+    // cell width NaN, so it falls back to the heuristic like an unset value.
+    const pinned = Number(opts.grid && opts.grid.columns);
     const cols = Math.max(1, Math.round(
-      opts.grid && opts.grid.columns ? opts.grid.columns : sceneW < 520 ? 2 : n <= 4 ? 2 : 3
+      Number.isFinite(pinned) && pinned ? pinned : sceneW < 520 ? 2 : n <= 4 ? 2 : 3
     ));
     // Each card is sized to its cell and rendered at scale 1 (no shrink-to-blur),
     // so the folder art and any content inside read at their true size.
