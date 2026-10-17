@@ -91,7 +91,7 @@ Per-folder tab colors, tokens for radius and blur, and the silhouette itself is 
 
 | option | type | default | notes |
 |---|---|---|---|
-| `items` | `Item[]` | `[]` | `{ label?, color?, src?, content?, decal?, ...data }` |
+| `items` | `Item[]` | `[]` | `{ label?, color?, src?, content?, decal?, gradient?, ...data }` |
 | `mode` | `'stack'\|'grid'\|'carousel'` | `'stack'` | 3 modes (a 4th "shelf" is planned) |
 | `grid` | `{ columns?, gap? }` | auto | pin the grid's column count and/or gap (px); default is a width/count heuristic |
 | `peek` | `'hover'\|'always'\|'off'` | `'hover'` | contents slide out of the folder |
