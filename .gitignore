@@ -5,3 +5,7 @@ dist/
 
 # scratch: raw capture recordings (converted to gif/mp4, then discarded)
 assets/_video/
+
+# playwright
+test-results/
+playwright-report/
