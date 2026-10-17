@@ -13,6 +13,8 @@ let made = [];
 const createFolderGallery = (...args) => { const h = rawCreate(...args); made.push(h); return h; };
 
 let root;
+const VALID_TRANSFORM = /^translate3d\(-?[\d.]+(?:e[+-]?\d+)?px,-?[\d.]+(?:e[+-]?\d+)?px,/; // jsdom drops invalid values, so assert presence, not absence of NaN
+
 beforeEach(() => {
   document.body.innerHTML = '';
   root = document.createElement('div');
@@ -417,7 +419,7 @@ describe('error paths: empty and invalid items', () => {
     expect(seen).toEqual([]);
     ['grid', 'carousel', 'stack'].forEach((m) => {
       h.setMode(m);
-      expect(cards()[0].style.transform).not.toContain('NaN');
+      expect(cards()[0].style.transform).toMatch(VALID_TRANSFORM);
     });
   });
 
@@ -426,7 +428,7 @@ describe('error paths: empty and invalid items', () => {
     h.next();
     h.setMode('stack');
     h.setMode('grid');
-    cards().forEach((c) => expect(c.style.transform).not.toContain('NaN'));
+    cards().forEach((c) => expect(c.style.transform).toMatch(VALID_TRANSFORM));
   });
 });
 
@@ -499,14 +501,14 @@ describe('error paths: invalid option values', () => {
     expect(card.style.getPropertyValue('--fg-folder-bg')).toBe('');
   });
 
-  it('odd-but-numeric grid values still lay out finite numbers', () => {
+  it('odd-but-numeric grid values still lay out valid transforms and sizes', () => {
     [{ columns: -3 }, { columns: 0 }, { columns: '3' }, { gap: 'x' }, { gap: -10 }, null, 'nope'].forEach((grid) => {
       createFolderGallery(root, { items: [...ITEMS, ...ITEMS], mode: 'grid', grid });
       cards().forEach((c) => {
-        expect(c.style.transform).not.toMatch(/NaN|Infinity/);
-        expect(c.style.width).not.toMatch(/NaN|Infinity/);
+        expect(c.style.transform).toMatch(VALID_TRANSFORM);
+        expect(c.style.width).toMatch(/^[\d.]+px$/);
       });
-      expect(root.querySelector('.fg-scene').style.height).not.toMatch(/NaN|Infinity/);
+      expect(root.querySelector('.fg-scene').style.height).toMatch(/^[\d.]+px$/);
     });
   });
 });

@@ -15,6 +15,8 @@ let made = [];
 const createFolderGallery = (...args) => { const h = rawCreate(...args); made.push(h); return h; };
 
 let root;
+const VALID_TRANSFORM = /^translate3d\(-?[\d.]+(?:e[+-]?\d+)?px,-?[\d.]+(?:e[+-]?\d+)?px,/; // jsdom drops invalid values, so assert presence, not absence of NaN
+
 beforeEach(() => {
   document.body.innerHTML = '';
   root = document.createElement('div');
@@ -96,8 +98,8 @@ describe.each(MODES)('%s mode: ARIA', (mode) => {
     for (let i = 0; i < 4; i++) {
       h.next();
       cards().forEach((c) => {
-        expect(c.style.transform).not.toContain('NaN');
-        expect(c.style.opacity).not.toBe('NaN');
+        expect(c.style.transform).toMatch(VALID_TRANSFORM);
+        expect(c.style.opacity).toMatch(/^[\d.]+$/);
       });
     }
   });
@@ -514,7 +516,7 @@ describe('fling lifecycle', () => {
       expect(ended).toEqual([{ index: 1, direction: 'next' }]);
       ['fg-card--flung', 'fg-card--snap', 'fg-card--entering', 'fg-card--dragging'].forEach((c) =>
         expect(card.classList.contains(c)).toBe(false));
-      expect(card.style.transform).not.toContain('NaN');
+      expect(card.style.transform).toMatch(VALID_TRANSFORM);
       h.destroy();
     } finally {
       vi.unstubAllGlobals();
