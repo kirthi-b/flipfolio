@@ -371,7 +371,7 @@ describe('robustness: bad goTo input', () => {
     expect(a).toBe(1);
     // no card carries a NaN transform
     [...root.querySelectorAll('.fg-card')].forEach((c) => {
-      expect(c.style.transform).not.toContain('NaN');
+      expect(c.style.transform).toMatch(/^translate3d\(-?[\d.]+(?:e[+-]?\d+)?px,/);
     });
     // only the one valid move emitted, and never with a NaN index
     expect(seen).toEqual([1]);
