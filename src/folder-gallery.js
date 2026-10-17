@@ -230,6 +230,10 @@ export function createFolderGallery(root, options = {}) {
     INSTANCES.delete(root);
   }
 
+  // A throw while building (a bad item, a failing contentRenderer) must not
+  // strand a half-built root with its classes and children but no teardown.
+  const guardBuild = (fn) => { try { return fn(); } catch (err) { teardown(); throw err; } };
+
   if (n === 0) {
     // Full no-op surface so an empty gallery matches the handle type: calling
     // any method (setColor, getItems, ...) is safe rather than a TypeError.
@@ -262,7 +266,7 @@ export function createFolderGallery(root, options = {}) {
   }
 
   /* ── Build cards ── */
-  const cardEls = items.map((item, i) => {
+  const cardEls = guardBuild(() => items.map((item, i) => {
     const card = document.createElement('div');
     card.className = 'fg-card';
     card.tabIndex = i === active ? 0 : -1; // roving tabindex
@@ -316,7 +320,7 @@ export function createFolderGallery(root, options = {}) {
 
     scene.appendChild(card);
     return card;
-  });
+  }));
 
   /* ── Dots ── */
   const dots = cardEls.map((_, i) => {
